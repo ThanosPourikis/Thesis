@@ -50,7 +50,7 @@ def run_lstm():
 
     training_time = time.time() - start_time
     print("Training time: {}".format(training_time))
-
+    print("Mean Absolute Error{}".format(hist.mean()))
     predict = pd.DataFrame(scaler.inverse_transform(y_train_pred.detach().numpy()))
     original = pd.DataFrame(scaler.inverse_transform(y_train_lstm.detach().numpy()))
 
