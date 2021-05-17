@@ -2,10 +2,9 @@ import math
 import time
 
 import numpy as np
-import pandas as pd
 import torch
 from matplotlib import pyplot as plt
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
 from models import lstm_model
@@ -69,8 +68,6 @@ class RunLstm:
         training_time = time.time() - start_time
         print("Training time: {}".format(training_time))
 
-
-
         # make predictions
         y_test_pred = model(x_test)
         lstm = []
@@ -80,14 +77,25 @@ class RunLstm:
         y_test_pred = sc.inverse_transform(y_test_pred.detach().numpy())
         y_test = sc.inverse_transform(y_test_lstm.detach().numpy())
 
-        # calculate root mean squared error
-        train_score = math.sqrt(mean_squared_error(y_train[:, 0], y_train_pred[:, 0]))
-        print('Train Score: %.2f RMSE' % train_score)
-        test_score = math.sqrt(mean_squared_error(y_test[:, 0], y_test_pred[:, 0]))
-        print('Test Score: %.2f RMSE' % test_score)
-        lstm.append(train_score)
-        lstm.append(test_score)
-        lstm.append(training_time)
+        if lstm_model.MAE == self.loss_function:
+            # calculate root mean squared error
+            train_score = mean_absolute_error(y_train[:, 0], y_train_pred[:, 0])
+            print('Train Score: %.2f MAE' % train_score)
+            test_score = mean_absolute_error(y_test[:, 0], y_test_pred[:, 0])
+            print('Test Score: %.2f MAE' % test_score)
+            lstm.append(train_score)
+            lstm.append(test_score)
+            lstm.append(training_time)
+        else:
+            # calculate root mean squared error
+            train_score = math.sqrt(mean_squared_error(y_train[:, 0], y_train_pred[:, 0]))
+            print('Train Score: %.2f RMSE' % train_score)
+            test_score = math.sqrt(mean_squared_error(y_test[:, 0], y_test_pred[:, 0]))
+            print('Test Score: %.2f RMSE' % test_score)
+            lstm.append(train_score)
+            lstm.append(test_score)
+            lstm.append(training_time)
+
 
         train_predict_plot = np.empty_like(price)
         train_predict_plot[:, :] = np.nan
@@ -103,5 +111,5 @@ class RunLstm:
 
         original = sc.inverse_transform(price)
         plt.plot(original, color='y')
-        plt.xlim(3200,3500)
+        plt.xlim(3200, 3500)
         plt.show()
