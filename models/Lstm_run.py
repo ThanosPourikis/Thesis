@@ -13,6 +13,24 @@ from models.lstm_model import LSTM
 from models.sliding_windows import split_data
 
 
+def error_calculation(function,y_train,y_train_pred,y_test,y_test_pred):
+
+    if lstm_model.MAE == function:
+        # calculate mean absolute error
+        train_score = mean_absolute_error(y_train[:, 0], y_train_pred[:, 0])
+        print('Train Score: %.2f MAE' % train_score)
+        test_score = mean_absolute_error(y_test[:, 0], y_test_pred[:, 0])
+        print('Test Score: %.2f MAE' % test_score)
+
+    else:
+        # calculate root mean squared error
+        train_score = math.sqrt(mean_squared_error(y_train[:, 0], y_train_pred[:, 0]))
+        print('Train Score: %.2f RMSE' % train_score)
+        test_score = math.sqrt(mean_squared_error(y_test[:, 0], y_test_pred[:, 0]))
+        print('Test Score: %.2f RMSE' % test_score)
+    return [train_score, test_score]
+
+
 class RunLstm:
     def __init__(self, loss_function, price,
                  lookback=24,
@@ -77,25 +95,8 @@ class RunLstm:
         y_test_pred = sc.inverse_transform(y_test_pred.detach().numpy())
         y_test = sc.inverse_transform(y_test_lstm.detach().numpy())
 
-        if lstm_model.MAE == self.loss_function:
-            # calculate root mean squared error
-            train_score = mean_absolute_error(y_train[:, 0], y_train_pred[:, 0])
-            print('Train Score: %.2f MAE' % train_score)
-            test_score = mean_absolute_error(y_test[:, 0], y_test_pred[:, 0])
-            print('Test Score: %.2f MAE' % test_score)
-            lstm.append(train_score)
-            lstm.append(test_score)
-            lstm.append(training_time)
-        else:
-            # calculate root mean squared error
-            train_score = math.sqrt(mean_squared_error(y_train[:, 0], y_train_pred[:, 0]))
-            print('Train Score: %.2f RMSE' % train_score)
-            test_score = math.sqrt(mean_squared_error(y_test[:, 0], y_test_pred[:, 0]))
-            print('Test Score: %.2f RMSE' % test_score)
-            lstm.append(train_score)
-            lstm.append(test_score)
-            lstm.append(training_time)
-
+        lstm = error_calculation(self.loss_function, y_train, y_train_pred, y_test, y_test_pred)
+        lstm.append(training_time)
 
         train_predict_plot = np.empty_like(price)
         train_predict_plot[:, :] = np.nan
