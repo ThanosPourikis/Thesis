@@ -1,6 +1,9 @@
 import torch
 from torch import nn
 
+MSE = 'MSE'
+MAE = 'MAE'
+
 
 class LSTM(nn.Module):
     def __init__(self, input_dim, hidden_dim, num_layers, output_dim):

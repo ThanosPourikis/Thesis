@@ -1,6 +1,4 @@
 
-
-
 def training_pipeline(features, labels):
     random_state = 42
     del features["Date"]
