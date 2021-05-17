@@ -11,7 +11,5 @@ if __name__ == '__main__':
     price = data[['SMP']]
 
     model = RunLstm(lstm_model.MSE, price)
-    plt = model.lstm()
+    model.lstm()
 
-    plt.plot(price['SMP'])
-    plt.show()

@@ -101,6 +101,7 @@ class RunLstm:
 
         plt.plot(test_predict_plot, color='b', label='Prediction')
 
-        plt.plot(hist)
-
-        return plt
+        original = sc.inverse_transform(price)
+        plt.plot(original, color='y')
+        plt.xlim(3200,3500)
+        plt.show()
