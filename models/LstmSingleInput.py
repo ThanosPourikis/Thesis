@@ -3,6 +3,7 @@ import time
 from os import path
 
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -43,12 +44,12 @@ def loss_function_selection(function):
         return torch.nn.QuantileLoss
 
 
-class RunSingleInputLstm:
+class SingleInputLstm:
     def __init__(self, loss_function, price,
                  lookback=24,
                  input_dim=1,
                  hidden_dim=32,
-                 num_layers=2,
+                 num_layers=1,
                  output_dim=1,
                  num_epochs=100, model_path=None):
 
@@ -122,7 +123,7 @@ class RunSingleInputLstm:
 
         test_predict_plot = np.empty_like(price)
         test_predict_plot[:, :] = np.nan
-        test_predict_plot[len(y_train_prediction) + self.lookback - 1:len(price) - 1] = y_test_prediction
+        test_predict_plot[len(y_train_prediction) + self.lookback:len(price)] = y_test_prediction
 
         plt.plot(train_predict_plot, color='r', label='Train Prediction')
 
@@ -132,5 +133,4 @@ class RunSingleInputLstm:
         plt.legend()
 
         torch.save(model, f'lstm_single_input')
-
         plt.show()

@@ -1,4 +1,4 @@
-,Date,Res_Total,Load Total,Hydro Total,sum_imports,sum_exports,weekdays,weekdays0,bankdays,bankdays0,winter,spring,autumn,summer,t1_weekdays,t1_weekdays0,t1_bankdays,t1_bankdays0,t1_winter,t1_spring,t1_autumn,t1_summer
+Num,Date,Res_Total,Load Total,Hydro Total,sum_imports,sum_exports,weekdays,weekdays0,bankdays,bankdays0,winter,spring,autumn,summer,t1_weekdays,t1_weekdays0,t1_bankdays,t1_bankdays0,t1_winter,t1_spring,t1_autumn,t1_summer
 0,2020-11-13 01:00:00+01:00,435.0,4217.0,0.0,800.0,279.0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0
 1,2020-11-13 02:00:00+01:00,415.0,4155.5,0.0,805.0,339.0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0
 2,2020-11-13 04:00:00+01:00,395.0,4079.5,0.0,773.0,339.0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0
