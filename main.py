@@ -1,8 +1,7 @@
-import numpy as np
 import pandas as pd
 
 from models import lstm_model
-from models.Lstm_run import RunLstm
+from models.LstmSingleInput import RunSingleInputLstm
 
 if __name__ == '__main__':
 
@@ -10,6 +9,6 @@ if __name__ == '__main__':
     data = pd.read_csv('SMP_VALUES.csv')  # Offline Data
     price = data[['SMP']]
 
-    model = RunLstm(lstm_model.MSE, price)
+    model = RunSingleInputLstm(lstm_model.MSE, price, model_path='lstm_single_input')
     model.lstm()
 

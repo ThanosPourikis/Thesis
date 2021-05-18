@@ -3,6 +3,7 @@ from torch import nn
 
 MSE = 'MSE'
 MAE = 'MAE'
+HuberLoss = 'HuberLoss'
 
 
 class LSTM(nn.Module):
