@@ -3,11 +3,11 @@ import time
 from os import path
 
 import numpy as np
-import pandas as pd
 import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
+from torch.nn.functional import smooth_l1_loss
 
 from models import lstm_model
 
@@ -24,11 +24,11 @@ def error_calculation(function, y_train, y_train_prediction, y_test, y_test_pred
         test_score = mean_absolute_error(y_test[:, 0], y_test_prediction[:, 0])
         print('Test Score: %.2f MAE' % test_score)
 
-    else:
+    elif lstm_model.MSE == function:
         # calculate root mean squared error
-        train_score = math.sqrt(mean_squared_error(y_train[:, 0], y_train_prediction[:, 0]))
+        train_score = math.sqrt(mean_squared_error(y_train[:, 0,], y_train_prediction[:, 0,]))
         print('Train Score: %.2f RMSE' % train_score)
-        test_score = math.sqrt(mean_squared_error(y_test[:, 0], y_test_prediction[:, 0]))
+        test_score = math.sqrt(mean_squared_error(y_test[:, 0,], y_test_prediction[:, 0,]))
         print('Test Score: %.2f RMSE' % test_score)
     return [train_score, test_score]
 
@@ -44,14 +44,14 @@ def loss_function_selection(function):
         return torch.nn.QuantileLoss
 
 
-class SingleInputLstm:
-    def __init__(self, loss_function, price,
+class LstmSingleInput:
+    def __init__(self, loss_function, price, model_path=None,
                  lookback=24,
                  input_dim=1,
                  hidden_dim=32,
                  num_layers=1,
                  output_dim=1,
-                 num_epochs=100, model_path=None):
+                 num_epochs=100):
 
         self.loss_function = loss_function
         self.price = price
@@ -132,5 +132,5 @@ class SingleInputLstm:
         plt.xlim(3350, 3450)
         plt.legend()
 
-        torch.save(model, f'lstm_single_input')
+        torch.save(model, self.model_path)
         plt.show()
