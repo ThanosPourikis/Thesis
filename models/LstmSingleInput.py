@@ -7,7 +7,6 @@ import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
-from torch.nn.functional import smooth_l1_loss
 
 from models import lstm_model
 
@@ -40,12 +39,12 @@ def loss_function_selection(function):
         return torch.nn.MSELoss(reduction='mean')
     elif lstm_model.HuberLoss == function:
         return torch.nn.SmoothL1Loss(reduction='mean')
-    elif lstm_model.QuantileLoss == function:
-        return torch.nn.QuantileLoss
+    # elif lstm_model.QuantileLoss == function:
+    #     return torch.nn.QuantileLoss
 
 
 class LstmSingleInput:
-    def __init__(self, loss_function, price, model_path=None,
+    def __init__(self, loss_function, price, model_path,
                  lookback=24,
                  input_dim=1,
                  hidden_dim=32,
@@ -96,18 +95,19 @@ class LstmSingleInput:
         for t in range(self.num_epochs):
             y_train_prediction = model(x_train)
             loss = criterion(y_train_prediction, y_train_lstm)
-            print(f"Epoch {t} {self.loss_function} ", loss.item())
+            print(f"Epoch {t} {self.loss_function}  {loss.item()}")
             hist[t] = loss.item()
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()
 
         training_time = time.time() - start_time
-        print("Training time: {}".format(training_time))
+        print(f"Training time: {training_time}")
 
         model.eval()
         # make predictions
         y_test_prediction = model(x_test)
+
         # invert predictions
         y_train_prediction = sc.inverse_transform(y_train_prediction.detach().numpy())
         y_train = sc.inverse_transform(y_train_lstm.detach().numpy())
@@ -120,17 +120,24 @@ class LstmSingleInput:
         train_predict_plot = np.empty_like(price)
         train_predict_plot[:, :] = np.nan
         train_predict_plot[self.lookback:len(y_train_prediction) + self.lookback] = y_train_prediction[:]
+        print(y_train_prediction)
 
         test_predict_plot = np.empty_like(price)
         test_predict_plot[:, :] = np.nan
-        test_predict_plot[len(y_train_prediction) + self.lookback:len(price)] = y_test_prediction
+        test_predict_plot[len(y_train_prediction) + self.lookback:len(price)] = y_test_prediction[:]
 
-        plt.plot(train_predict_plot, color='r', label='Train Prediction')
+        future_predict = np.empty_like(price)
+        future_predict[:, :] = np.nan
 
-        plt.plot(test_predict_plot, color='b', label='Test Prediction')
-        plt.plot(self.price, color='y', label='Actual Price')
-        plt.xlim(3350, 3450)
-        plt.legend()
+        fig, axs = plt.subplots(2)
+        axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
 
-        torch.save(model, self.model_path)
+        axs[0].plot(test_predict_plot, color='b', label='Test Prediction')
+        axs[0].plot(self.price, color='y', label='Actual Price')
+        axs[0].set_title('Model')
+        axs[0].set_xlim(len(y_train_prediction) - 25, len(y_train_prediction) + 25)
+        axs[0].legend()
+        axs[1].plot(hist, label='Loss')
+        axs[1].set_title('Loss')
         plt.show()
+        return model

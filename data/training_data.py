@@ -1,15 +1,16 @@
-
 import pandas as pd
-
-from data.model_data import target_model_data
 
 
 def training_data():
 
-    dataframe = target_model_data()
-    temp = pd.read_csv('SMP_VALUES.csv')
-    dataframe["SMP"] = temp['SMP']
+    # data = pd.DataFrame(target_model_data())
+    # data.to_csv('data.csv')
+    smp_values = pd.read_csv('SMP_VALUES.csv')
+    data = pd.read_csv('data.csv')
+
+    dataframe = pd.concat([data, smp_values['SMP']], axis=1, join='inner')
     del dataframe['Date']
-    dataframe.to_csv('data.csv', index=False)
+    del dataframe['Unnamed: 0']
+    dataframe.to_csv('data_for_training.csv')
 
     return dataframe
