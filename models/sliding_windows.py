@@ -5,7 +5,7 @@ def split_data(data, lookback, test_size=0.2):
     # data_raw = data.to_numpy()
 
     windows = []
-    for i in range(len(data) - lookback,):
+    for i in range(len(data) - lookback):
         # windows.append(data_raw[i: i + lookback])
         windows.append(data[i: i + lookback])
 

@@ -5,6 +5,7 @@ from data.training_data import training_data
 from models import lstm_model
 from models.LstmSingleInput import LstmSingleInput
 
+
 if __name__ == '__main__':
 
     data = training_data()
@@ -18,4 +19,4 @@ if __name__ == '__main__':
     data = data[['SMP']]
     model = LstmSingleInput(lstm_model.MSE, data, model_path)
     model = model.lstm()
-    #torch.save(model, model_path)
+    # torch.save(model, model_path)
