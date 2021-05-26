@@ -1,60 +1,29 @@
-import math
 import time
 from os import path
 
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from sklearn.metrics import mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
-from models import lstm_model
 
 from models.lstm_model import LSTM
-from models.sliding_windows import split_data
-
-
-def error_calculation(function, y_train, y_train_prediction, y_test, y_test_prediction):
-
-    if lstm_model.MAE == function:
-        # calculate mean absolute error
-        train_score = mean_absolute_error(y_train[:, 0], y_train_prediction[:, 0])
-        print('Train Score: %.2f MAE' % train_score)
-        test_score = mean_absolute_error(y_test[:, 0], y_test_prediction[:, 0])
-        print('Test Score: %.2f MAE' % test_score)
-
-    elif lstm_model.MSE == function:
-        # calculate root mean squared error
-        train_score = math.sqrt(mean_squared_error(y_train[:, 0,], y_train_prediction[:, 0,]))
-        print('Train Score: %.2f RMSE' % train_score)
-        test_score = math.sqrt(mean_squared_error(y_test[:, 0,], y_test_prediction[:, 0,]))
-        print('Test Score: %.2f RMSE' % test_score)
-    return [train_score, test_score]
-
-
-def loss_function_selection(function):
-    if lstm_model.MAE == function:
-        return torch.nn.L1Loss()
-    elif lstm_model.MSE == function:
-        return torch.nn.MSELoss(reduction='mean')
-    elif lstm_model.HuberLoss == function:
-        return torch.nn.SmoothL1Loss(reduction='mean')
-    # elif lstm_model.QuantileLoss == function:
-    #     return torch.nn.QuantileLoss
+from data.sliding_windows import split_data
+from utils.utils import loss_function_selection, error_calculation
 
 
 class LstmSingleInput:
-    def __init__(self, loss_function, price, model_path,
-                 learning_rate = 0.01,
+    def __init__(self, loss_function, data, model_path,
+                 learning_rate=0.001,
                  lookback=24,
-                 input_dim=1,
+                 input_dim=7,
                  hidden_dim=32,
                  num_layers=2,
                  output_dim=1,
                  num_epochs=100):
 
         self.loss_function = loss_function
-        self.price = price
+        self.data = data
         self.lookback = lookback
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -66,15 +35,15 @@ class LstmSingleInput:
 
     def lstm(self):
 
-        sc = MinMaxScaler()
-        price = sc.fit_transform(self.price)
-        x_train, y_train, x_test, y_test = split_data(price, self.lookback)
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+
+        x_train, y_train, x_validation, y_validation = split_data(self.data, self.lookback, scaler)
 
         x_train = torch.from_numpy(x_train).type(torch.Tensor)
-        x_test = torch.from_numpy(x_test).type(torch.Tensor)
+        x_validation = torch.from_numpy(x_validation).type(torch.Tensor)
 
         y_train_lstm = torch.from_numpy(y_train).type(torch.Tensor)
-        y_test_lstm = torch.from_numpy(y_test).type(torch.Tensor)
+        y_validation_lstm = torch.from_numpy(y_validation).type(torch.Tensor)
         if path.exists(self.model_path):
 
             print('Found PreTrained Model  ..... \nLoading ..... ')
@@ -108,40 +77,34 @@ class LstmSingleInput:
 
         model.eval()
         # make predictions
-        y_test_prediction = model(x_test)
-        _, _, x, _ = split_data((y_train_prediction.detach().numpy()), lookback=24)
-        x = torch.from_numpy(x).type(torch.Tensor)
-        future_prediction = sc.inverse_transform((model(x)).detach().numpy())
+        y_validation_prediction = model(x_validation)
 
         # invert predictions
-        y_train_prediction = sc.inverse_transform(y_train_prediction.detach().numpy())
-        y_train = sc.inverse_transform(y_train_lstm.detach().numpy())
-        y_test_prediction = sc.inverse_transform(y_test_prediction.detach().numpy())
-        y_test = sc.inverse_transform(y_test_lstm.detach().numpy())
+        y_train_prediction = scaler.inverse_transform(y_train_prediction.detach().numpy())
+        y_train = scaler.inverse_transform(y_train_lstm.detach().numpy())
+        y_validation_prediction = scaler.inverse_transform(y_validation_prediction.detach().numpy())
+        y_validation = scaler.inverse_transform(y_validation_lstm.detach().numpy())
 
-        lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_test, y_test_prediction)
+        lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
         lstm.append(training_time)
 
-        train_predict_plot = np.empty_like(price)
+        train_predict_plot = np.empty_like(data)
         train_predict_plot[:, :] = np.nan
-        train_predict_plot[self.lookback - 2:len(y_train_prediction) + self.lookback - 2] = y_train_prediction[:]
+        train_predict_plot[self.lookback:len(y_train_prediction) + self.lookback] = y_train_prediction[:]
 
-        test_predict_plot = np.empty_like(price)
-        test_predict_plot[:, :] = np.nan
-        test_predict_plot[len(y_train_prediction) + self.lookback - 2:len(price)-2] = y_test_prediction[:]
+        validation_predict_plot = np.empty_like(data)
+        validation_predict_plot[:, :] = np.nan
+        validation_predict_plot[len(y_train_prediction) + self.lookback - 2:len(data)-2] = y_validation_prediction[:]
 
-        future_predict_plot = np.empty_like(price)
-        future_predict_plot[:, :] = np.nan
-        # future_predict_plot[len(y_train_prediction) + self.lookback - 1:] = future_prediction[:len(price) - 1]
-        future_predict_plot = np.append(future_predict_plot, future_prediction[:24])
         fig, axs = plt.subplots(2)
+
         axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
 
-        axs[0].plot(test_predict_plot, color='b', label='Test Prediction')
-        axs[0].plot(self.price, color='y', label='Actual Price')
+        axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
+        axs[0].plot(self.data, color='y', label='Actual Price')
         axs[0].set_title('Model')
         axs[0].set_xlim(len(y_train_prediction) - 25, len(y_train_prediction) + 50)
-        axs[0].plot(future_predict_plot, color='m', label='Prediction')
+        # axs[0].set_xlim(len(self.data)-50, len(self.data)+100)
         axs[0].legend()
         axs[1].plot(hist, label='Loss')
         axs[1].set_title('Loss')
