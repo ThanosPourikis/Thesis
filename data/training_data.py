@@ -14,7 +14,8 @@ def training_data_no_missing_values():
         return pd.read_csv('data_for_training.csv')
     else:
         dataframe = pd.DataFrame(columns=features_list)
-        data = pd.concat([pd.read_csv('FEATURES_USED.csv', index_col=0), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
+        data = pd.concat([pd.read_csv('FEATURES_USED.csv', index_col=0),
+                          (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
         start_date = date_con('2020-11-13 00:00:00+01:00')
         i = 0
         while start_date.ctime() != date_con(data.iloc[-1].loc['Date']).ctime():

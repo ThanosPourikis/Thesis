@@ -18,4 +18,4 @@ class Linear:
         lr = LinearRegression().fit(x_train, y_train)
         print(f'Train Score :{lr.score(x_train,y_train)}')
         print(f'Validation Score : {lr.score(x_validate,y_validate)}')
-        # model.fit()
+
