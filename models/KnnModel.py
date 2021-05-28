@@ -1,37 +1,33 @@
+import time
 from math import sqrt
-import matplotlib
 
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 
 
 class KnnModel:
-    def __init__(self, validation_size, data):
+    def __init__(self, validation_size, features, labels, n_neighbors_parameters):
         self.validation_size = validation_size
-        self.data = data
+        self.features = features
+        self.labels = labels
+        self.n_neighbors_parameters = {'n_neighbors': range(1, n_neighbors_parameters)}
 
     def knn(self):
-        # scaler = MinMaxScaler(feature_range=(-1, 1))
-        # data = scaler.fit_transform(self.data)
-        data = self.data
-        del data['Date']
-        del data['Unnamed: 0']
-        train_size = int(self.validation_size * len(data))
 
-        x = data.iloc[:, :-1]
-        y = data.iloc[:, -1]
+        del self.features['Date']
+        del self.labels['Date']
 
-        # x_train, x_validate, y_train, y_validate = train_test_split(x, y, test_size=self.validation_size)
-        x_train, x_validate, y_train, y_validate = x[:train_size], x[train_size:], y[:train_size], y[train_size:]
-        regressor = KNeighborsRegressor(n_neighbors=50)
-        regressor.fit(x_train, y_train)
-        x_prediction = regressor.predict(x_train)
+        x_train, x_validate, y_train, y_validate = train_test_split(self.features, self.labels, random_state=69,
+                                                                    test_size=self.validation_size, shuffle=False)
+        start_time = time.time()
+        gs = GridSearchCV(KNeighborsRegressor(), self.n_neighbors_parameters)
+        gs.fit(x_train, y_train)
+        print(f'Time:{time.time() - start_time}')
 
-        print(f'Train Root Mean Square Error : {sqrt(mean_squared_error(y_train,x_prediction))}')
+        y_train_prediction = gs.predict(x_train)
+        print(f'Mean Absolute Train Error : {mean_absolute_error(y_train, y_train_prediction)}')
+        print(f'Mean Absolute Validation Error : {mean_absolute_error(y_validate, gs.predict(x_validate))}')
 
-        y_prediction = regressor.predict(x_validate)
-        print(f'Validate Root Mean Square Error : {sqrt(mean_squared_error(y_validate, y_prediction))}')
-
+        print(gs.best_estimator_)
 

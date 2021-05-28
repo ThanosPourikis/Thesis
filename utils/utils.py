@@ -10,9 +10,13 @@ MAE = 'MAE'
 HuberLoss = 'HuberLoss'
 # QuantileLoss = 'QuantileLoss'
 
+features_list = ['Date', 'Res_Total', 'Load Total', 'Hydro Total', 'sum_imports', 'sum_exports',
+                 'weekdays', 'weekdays0', 'bankdays', 'bankdays0', 'winter', 'spring', 'autumn',
+                 'summer', 't1_weekdays', ' t1_weekdays0', 't1_bankdays', 't1_bankdays0',
+                 't1_winter', 't1_spring', 't1_autumn', 't1_summer', 'SMP']
+
 
 def error_calculation(function, y_train, y_train_prediction, y_test, y_test_prediction):
-
     if MAE == function:
         # calculate mean absolute error
         train_score = mean_absolute_error(y_train[:, 0], y_train_prediction[:, 0])
@@ -22,9 +26,9 @@ def error_calculation(function, y_train, y_train_prediction, y_test, y_test_pred
 
     elif MSE == function:
         # calculate root mean squared error
-        train_score = math.sqrt(mean_squared_error(y_train[:, 0, ], y_train_prediction[:, 0,]))
+        train_score = math.sqrt(mean_squared_error(y_train[:, 0, ], y_train_prediction[:, 0, ]))
         print('Train Score: %.2f RMSE' % train_score)
-        test_score = math.sqrt(mean_squared_error(y_test[:, 0, ], y_test_prediction[:, 0,]))
+        test_score = math.sqrt(mean_squared_error(y_test[:, 0, ], y_test_prediction[:, 0, ]))
         print('Test Score: %.2f RMSE' % test_score)
     return [train_score, test_score]
 
@@ -37,4 +41,4 @@ def loss_function_selection(function):
     elif HuberLoss == function:
         return torch.nn.SmoothL1Loss(reduction='mean')
     # elif QuantileLoss == function:
-    #     return QuantileLoss()
+    # return QuantileLoss()

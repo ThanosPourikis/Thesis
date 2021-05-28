@@ -12,14 +12,14 @@ from data.sliding_windows import split_data
 from utils.utils import loss_function_selection, error_calculation
 
 
-class LstmSingleInput:
+class LstmMVInput:
     def __init__(self, loss_function, data, model_path,
                  learning_rate=0.001,
                  lookback=24,
-                 input_dim=7,
+                 input_dim=22,
                  hidden_dim=32,
                  num_layers=2,
-                 output_dim=1,
+                 output_dim=24,
                  num_epochs=100):
 
         self.loss_function = loss_function
@@ -33,10 +33,10 @@ class LstmSingleInput:
         self.model_path = model_path
         self.learning_rate = learning_rate
 
-    def lstm(self):
+    def run_lstm(self):
 
         scaler = MinMaxScaler(feature_range=(-1, 1))
-
+        del self.data['Date']
         x_train, y_train, x_validation, y_validation = split_data(self.data, self.lookback, scaler)
 
         x_train = torch.from_numpy(x_train).type(torch.Tensor)
@@ -44,6 +44,7 @@ class LstmSingleInput:
 
         y_train_lstm = torch.from_numpy(y_train).type(torch.Tensor)
         y_validation_lstm = torch.from_numpy(y_validation).type(torch.Tensor)
+
         if path.exists(self.model_path):
 
             print('Found PreTrained Model  ..... \nLoading ..... ')
@@ -88,20 +89,20 @@ class LstmSingleInput:
         lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
         lstm.append(training_time)
 
-        train_predict_plot = np.empty_like(data)
+        train_predict_plot = np.empty_like(self.data)
         train_predict_plot[:, :] = np.nan
         train_predict_plot[self.lookback:len(y_train_prediction) + self.lookback] = y_train_prediction[:]
 
-        validation_predict_plot = np.empty_like(data)
+        validation_predict_plot = np.empty_like(self.data)
         validation_predict_plot[:, :] = np.nan
-        validation_predict_plot[len(y_train_prediction) + self.lookback - 2:len(data)-2] = y_validation_prediction[:]
+        validation_predict_plot[len(y_train_prediction) + self.lookback - 2:len(self.data)-2] = y_validation_prediction[:]
 
         fig, axs = plt.subplots(2)
 
         axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
 
         axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
-        axs[0].plot(self.data, color='y', label='Actual Price')
+        axs[0].plot(self.data[-1], color='y', label='Actual Price')
         axs[0].set_title('Model')
         axs[0].set_xlim(len(y_train_prediction) - 25, len(y_train_prediction) + 50)
         # axs[0].set_xlim(len(self.data)-50, len(self.data)+100)
