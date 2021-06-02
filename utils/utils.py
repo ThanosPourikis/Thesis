@@ -1,5 +1,13 @@
 import math
+
+import pandas as pd
 import sqlalchemy
+
+
+import plotly
+import plotly.express as px
+import json
+
 
 import torch
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -45,7 +53,22 @@ def loss_function_selection(function):
     # return QuantileLoss()
 
 
+def get_conn():
+    engine = sqlalchemy.create_engine('sqlite:///database.db')
+    return engine.connect()
+
+
 def save_to_db(dataframe, df_name):
-    engine = sqlalchemy.create_engine('sqlite:///database.db',echo=True)
-    connection = engine.connect()
+    connection = get_conn()
     dataframe.to_sql(df_name, connection, if_exists='replace', index=0)
+
+
+def get_data(table, column):
+    connection = get_conn()
+    return pd.read_sql(f'SELECT {column} FROM {table}', connection)
+
+def get_json_for_fig(df):
+    fig = px.line(df,x='Date',y='SMP')
+    fig = fig.update_xaxes(rangeslider_visible=True)
+    fig.update_layout(width=1500, height=500)
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 

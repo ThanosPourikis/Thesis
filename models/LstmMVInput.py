@@ -13,7 +13,7 @@ from utils.utils import loss_function_selection, error_calculation
 
 
 class LstmMVInput:
-    def __init__(self, loss_function, data, model_path,
+    def __init__(self, loss_function, data, model_path=None,
                  learning_rate=0.001,
                  lookback=24,
                  input_dim=6,
