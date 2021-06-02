@@ -1,4 +1,5 @@
 import math
+import sqlalchemy
 
 import torch
 from sklearn.metrics import mean_squared_error, mean_absolute_error
@@ -42,3 +43,9 @@ def loss_function_selection(function):
         return torch.nn.SmoothL1Loss(reduction='mean')
     # elif QuantileLoss == function:
     # return QuantileLoss()
+
+
+def save_to_db(dataframe, df_name):
+    engine = sqlalchemy.create_engine('sqlite:///database.db',echo=True)
+    connection = engine.connect()
+    dataframe.to_sql(df_name, connection, if_exists='replace', index=0)

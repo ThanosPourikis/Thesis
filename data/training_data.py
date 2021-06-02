@@ -3,7 +3,7 @@ from os import path
 
 import pandas as pd
 
-from utils.utils import features_list
+from utils.utils import features_list, save_to_db
 
 
 def date_con(date): return datetime.datetime.fromisoformat(date)
@@ -36,4 +36,7 @@ def training_data_no_missing_values():
 
 
 def training_data():
-    return pd.concat([pd.read_csv('FEATURES_USED.csv'), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
+    dataframe = pd.concat([pd.read_csv('data.csv'), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
+    del dataframe['Unnamed: 0']
+    save_to_db(dataframe=dataframe, df_name='training_data')
+    return dataframe

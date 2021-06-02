@@ -19,6 +19,7 @@ class KnnModel:
 
         x_train, x_validate, y_train, y_validate = train_test_split(self.features, self.labels, random_state=96,
                                                                     test_size=self.validation_size, shuffle=False)
+        print("Training ... ")
         start_time = time.time()
         gs = GridSearchCV(KNeighborsRegressor(), self.n_neighbors_parameters)
         gs.fit(x_train, y_train)
