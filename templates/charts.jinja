@@ -1,0 +1,37 @@
+{% block charts %}
+<div id="SMP"></div>
+	<script>
+		var graph = {{ smp_json | safe }};
+		Plotly.plot('SMP', graph, {});
+	</script>
+
+	<div id="Res_Total"></div>
+	<script>
+		var graph = {{ res_total_json | safe }};
+		Plotly.plot('Res_Total', graph, {});
+	</script>
+
+	<div id="load_total"></div>
+	<script>
+		var graph = {{ load_total_json | safe }};
+		Plotly.plot('load_total', graph, {});
+	</script>
+
+	<div id="hydro_total"></div>
+	<script>
+		var graph = {{ hydro_total_json | safe }};
+		Plotly.plot('hydro_total', graph, {});
+	</script>
+	
+	<div id="sum_imports"></div>
+	<script>
+		var graph = {{ sum_imports_json | safe }};
+		Plotly.plot('sum_imports', graph, {});
+	</script>
+
+	<div id="sum_exports"></div>
+	<script>
+		var graph = {{ sum_exports_json | safe }};
+		Plotly.plot('sum_exports', graph, {});
+	</script>
+{% endblock charts %}}

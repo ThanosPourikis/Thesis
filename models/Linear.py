@@ -9,7 +9,7 @@ class Linear:
         self.labels = labels
         self.validation_size = validation_size
 
-    def rum_linear(self):
+    def run_linear(self):
 
         del self.features['Date']
         del self.labels['Date']
