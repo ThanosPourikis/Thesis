@@ -1,13 +1,12 @@
 /venv/
 /Untitled 1.ods
 /lstm_single_input
-/.~lock.Untitled 1.ods#
 /all_files_isp1/
 /data_for_training.csv
 /data.csv
 /all_files_isp1/20210521_ISP1Requirements_01.xlsx
 /Figure_1.png
-__pycache__/main.cpython-38.pyc
+__pycache__/
 .idea/dataSources.local.xml
 .idea/dataSources.xml
 .vscode/launch.json
@@ -19,3 +18,4 @@ models/__pycache__/Linear.cpython-38.pyc
 models/__pycache__/lstm_model.cpython-38.pyc
 models/__pycache__/LstmMVInput.cpython-38.pyc
 utils/__pycache__/utils.cpython-38.pyc
+/.idea/
