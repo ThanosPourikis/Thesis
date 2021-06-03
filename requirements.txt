@@ -17,7 +17,7 @@ cmd2==1.5.0
 colorama==0.4.3
 colorlog==5.0.1
 command-not-found==0.3
-cryptography==3.2
+cryptography>=3.3.2
 cupshelpers==1.0
 cycler==0.10.0
 dbus-python==1.2.16
