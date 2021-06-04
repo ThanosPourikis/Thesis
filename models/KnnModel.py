@@ -15,7 +15,6 @@ class KnnModel:
 	def run_knn(self):
 
 		del self.features['Date']
-		# del self.labels['Date']
 
 		x_train, x_validate, y_train, y_validate = train_test_split(self.features, self.labels, random_state=96,
 																	test_size=self.validation_size, shuffle=True)

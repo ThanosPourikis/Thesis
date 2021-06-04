@@ -47,7 +47,7 @@ def Linear_page():
 
 	df['Prediction'], train_score, validation_score = linear.run_linear()
 
-	return render_template('model.jinja', title = 'Last 24hours Pediction vs Actual Price',
+	return render_template('model.jinja', title = 'Linear Model Last 24hours Pediction vs Actual Price',
 							linear_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
 							train_score= train_score,
 							validation_score = validation_score)
@@ -59,7 +59,7 @@ def Knn():
 	
 	df['Prediction'], train_score, validation_score = KnnR.run_knn()
 	
-	return render_template('model.jinja', title = 'Last 24hours Pediction vs Actual Price',
+	return render_template('model.jinja', title = 'KnnR Model Last 24hours Pediction vs Actual Price',
 							linear_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
 							train_score= train_score,
 							validation_score = validation_score)
