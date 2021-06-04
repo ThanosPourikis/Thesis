@@ -1,10 +1,14 @@
 import pandas as pd
+from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list
+from models.KnnModel import KnnModel
+from models.Linear import Linear
+from models.KnnModel import KnnModel
 
 import flask
 import sqlalchemy
 from flask import render_template
 
-from utils.utils import get_data, get_json_for_fig_line,get_json_for_fig_scatter
+from utils.utils import get_data, get_json_for_line_fig,get_json_for_fig_scatter
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 app.config['Debug'] = True
@@ -12,18 +16,20 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
+
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
-							smp_json = get_json_for_fig_line(df,'Date','SMP'),
-							res_total_json = get_json_for_fig_line(df,'Date','Res_Total'),
-							load_total_json = get_json_for_fig_line(df,'Date','Load Total'),
-							hydro_total_json = get_json_for_fig_line(df,'Date','Hydro Total'),
-							sum_imports_json = get_json_for_fig_line(df,'Date','sum_imports'),
-							sum_exports_json = get_json_for_fig_line(df,'Date','sum_exports'),
+							smp_json = get_json_for_line_fig(df,'Date','SMP'),
+							res_total_json = get_json_for_line_fig(df,'Date','Res_Total'),
+							load_total_json = get_json_for_line_fig(df,'Date','Load Total'),
+							hydro_total_json = get_json_for_line_fig(df,'Date','Hydro Total'),
+							sum_imports_json = get_json_for_line_fig(df,'Date','sum_imports'),
+							sum_exports_json = get_json_for_line_fig(df,'Date','sum_exports'),
 							)
 
 @app.route('/Correlation')
 def corrolations():
+
 	df = get_data('training_data','*')
 	return render_template('correlation.jinja',title = 'Correlation',
 							res_total_json = get_json_for_fig_scatter(df,'Res_Total','SMP'),
@@ -34,12 +40,29 @@ def corrolations():
 							)
 
 @app.route('/Linear')
-def Linear():
-	return 'Temp for Linear'
+def Linear_page():
+	df = get_data('training_data','*')
+	linear = Linear(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'])
+	
+
+	df['Prediction'], train_score, validation_score = linear.run_linear()
+
+	return render_template('model.jinja', title = 'Last 24hours Pediction vs Actual Price',
+							linear_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
+							train_score= train_score,
+							validation_score = validation_score)
 
 @app.route('/Knn')
 def Knn():
-	return 'Temp for Knn'
+	df = get_data('training_data','*')
+	KnnR = KnnModel(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'])
+	
+	df['Prediction'], train_score, validation_score = KnnR.run_knn()
+	
+	return render_template('model.jinja', title = 'Last 24hours Pediction vs Actual Price',
+							linear_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
+							train_score= train_score,
+							validation_score = validation_score)
 
 
 @app.route('/Lstm')
@@ -48,5 +71,5 @@ def lstm():
 
 
 if __name__ == '__main__':
-	app.run(host="localhost", port=8000, debug=True)
 
+	app.run(host="localhost", port=8000, debug=True)

@@ -1,0 +1,14 @@
+{% extends "base.jinja" %}
+{% block content %}
+	<h1>{{title}}</h1>
+	<div id="linear_json"></div>
+	<script>
+		var graph = {{ linear_json | safe }};
+		Plotly.plot('linear_json', graph, {});
+	</script>
+
+	<h3>Train Score : {{train_score}}</h3>
+	<br>
+	<h3>Validation Score : {{validation_score}}</h3>
+
+{% endblock content %}
