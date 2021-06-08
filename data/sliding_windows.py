@@ -25,9 +25,9 @@ def split_data(data, lookback, validation_size=0.2):
 
     validate_size = int(len(data) * validation_size)
     train_size = len(data) - validate_size
-    y_train = np.array([data.iloc[i: i + lookback, -1] for i in range(lookback, train_size, lookback)])
-    y_validate = np.array([data.iloc[i: i + lookback, -1] for i in range(train_size, int(len(data)/24)*24, lookback)][:-1])
+    y_train = np.array([data.iloc[i: i + lookback, -1] for i in range(lookback, train_size+24, lookback)])
+    y_validate = np.array([data.iloc[i: i + lookback, -1] for i in range(train_size+24, (int(len(data)/24)*24), lookback)][:-1])
 
-    x_train = np.array([data.iloc[i: i + lookback] for i in range(lookback, train_size, lookback)])
-    x_validate = np.array([data.iloc[i: i + lookback] for i in range(train_size, int(len(data)/24)*24, lookback)][:-1])
+    x_train = np.array([data.iloc[i: i + lookback] for i in range(0, train_size, lookback)])
+    x_validate = np.array([data.iloc[i: i + lookback] for i in range(train_size, (int(len(data)/24)*24)-24, lookback)][:-1])
     return x_train, y_train, x_validate, y_validate
