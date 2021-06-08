@@ -23,20 +23,21 @@ extended_features_list = ['Date', 'Res_Total', 'Load Total', 'Hydro Total', 'sum
 
 features_list = ['Res_Total','Load Total','Hydro Total','Date','sum_imports','sum_exports','SMP']
 
-def error_calculation(function, y_train, y_train_prediction, y_test, y_test_prediction):
+def error_calculation(function, y_train, y_train_prediction, y_validation, y_validation_prediction):
 	if MAE == function:
 		# calculate mean absolute error
-		train_score = mean_absolute_error(y_train[:, 0], y_train_prediction[:, 0])
+		train_score = mean_absolute_error(y_train_prediction.flatten(), y_train.flatten())
 		print('Train Score: %.2f MAE' % train_score)
-		test_score = mean_absolute_error(y_test[:, 0], y_test_prediction[:, 0])
-		print('Test Score: %.2f MAE' % test_score)
+		test_score = mean_absolute_error(y_validation_prediction.flatten(), y_validation.flatten())
+		print('Validation Score: %.2f MAE' % test_score)
+		return[train_score,test_score]
 
 	elif MSE == function:
 		# calculate root mean squared error
-		train_score = math.sqrt(mean_squared_error(y_train[:, 0, ], y_train_prediction[:, 0, ]))
+		train_score = math.sqrt(mean_squared_error(y_train_prediction.flatten(), y_train.flatten()))
 		print('Train Score: %.2f RMSE' % train_score)
-		test_score = math.sqrt(mean_squared_error(y_test[:, 0, ], y_test_prediction[:, 0, ]))
-		print('Test Score: %.2f RMSE' % test_score)
+		test_score = math.sqrt(mean_squared_error(y_validation_prediction.flatten(), y_validation.flatten()))
+		print('Validation Score: %.2f RMSE' % test_score)
 	return [train_score, test_score]
 
 
