@@ -38,7 +38,7 @@ def training_data_no_missing_values():
 
 
 def training_data():
-	dataframe = pd.concat([pd.read_csv('data.csv'), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
+	dataframe = pd.concat([pd.read_csv('data.csv',index_col=0), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
 	del dataframe['Unnamed: 0']
 	dataframe.to_csv('data_for_training.csv', index=False)
 	save_df_to_db(dataframe=dataframe, df_name='training_data')
@@ -46,8 +46,14 @@ def training_data():
 
 
 def training_data_extended_features_list():
-	dataframe = pd.concat([pd.read_csv('FEATURES_USED.csv'), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
+	dataframe = pd.concat([pd.read_csv('FEATURES_USED.csv',index_col=0), (pd.read_csv('SMP_VALUES.csv'))['SMP']], axis=1, join='inner')
 	del dataframe['Unnamed: 0']
 	dataframe.to_csv('training_data_extended_features_list.csv', index=False)
 	save_df_to_db(dataframe=dataframe, df_name='training_data_extended_features_list')
 	return dataframe
+
+def training_data_with_power():
+	data = pd.read_csv('data.csv',index_col=0)
+	smp = pd.read_csv('SMP_VALUES.csv',index_col=0)
+	power = pd.read_csv('power_plants.csv',index_col=0)
+	return data.set_index('Date').join(smp.set_index('Date')).join(power.set_index('Date'))#Fix this Daylight saving

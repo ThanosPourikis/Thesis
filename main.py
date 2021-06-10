@@ -1,13 +1,13 @@
 from sklearn import utils
 from models.LstmMVInput import LstmMVInput
 import pandas as pd
-from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list
+from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list,training_data_with_power
 
 from models.KnnModel import KnnModel
 from models.Linear import Linear
 from models.KnnModel import KnnModel
 from data.model_data import target_model_data
-
+from data.isp1_results import isp1_results
 import flask
 import sqlalchemy
 from flask import render_template
@@ -21,6 +21,7 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
+	isp1_results()
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
 							smp_json = get_json_for_line_fig(df,'Date','SMP'),
@@ -59,7 +60,7 @@ def Linear_page():
 @app.route('/Knn')
 def Knn():
 	df = get_data('training_data','*')
-	KnnR = KnnModel(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'], data = df)
+	KnnR = KnnModel(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'])
 	
 	df['Prediction'], train_score, validation_score = KnnR.run_knn()
 	
@@ -71,8 +72,9 @@ def Knn():
 
 @app.route('/Lstm')
 def lstm():
-	df = get_data('training_data','*')
+	# df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
+	df = training_data_with_power()
 	lstm_model = LstmMVInput(utils.MAE,df)
 	lstm_model.run_lstm()
 	return render_template('base.jinja')

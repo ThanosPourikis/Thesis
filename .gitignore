@@ -20,3 +20,5 @@ models/__pycache__/LstmMVInput.cpython-38.pyc
 utils/__pycache__/utils.cpython-38.pyc
 /.idea/
 /isp1_results/
+export.csv
+test.csv

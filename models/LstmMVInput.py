@@ -16,16 +16,16 @@ class LstmMVInput:
 	def __init__(self, loss_function, data,
 				 learning_rate=0.001,
 				 lookback=24,
-				 input_dim=6,
+				 input_dim=5,
 				 hidden_dim=32,
-				 num_layers=2,
+				 num_layers=1,
 				 output_dim=24,
 				 num_epochs=500):
 
 		self.loss_function = loss_function
 		self.data = data
 		self.lookback = lookback
-		self.input_dim = input_dim
+		self.input_dim = len(data.columns)
 		self.hidden_dim = hidden_dim
 		self.num_layers = num_layers
 		self.output_dim = output_dim
@@ -33,7 +33,7 @@ class LstmMVInput:
 		self.learning_rate = learning_rate
 
 	def run_lstm(self):
-		del self.data['Date']
+		self.data = self.data[self.data.iloc[:,0]!='Date']
 
 		scaler = MinMaxScaler(feature_range=(-1, 1))
 		labels_scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -66,14 +66,21 @@ class LstmMVInput:
 		start_time = time.time()
 
 		for t in range(self.num_epochs):
+			model.train()
 			y_train_prediction = model(x_train)
 			loss = criterion(y_train_prediction, y_train_lstm)
-			print(f"Epoch {t} {self.loss_function}  {loss.item()}")
+			print(f"Epoch {t} {self.loss_function}  {loss.detach().item()}")
 			hist_train[t] = loss.item()
 			optimiser.zero_grad()
 			loss.backward()
 			optimiser.step()
-
+			
+			
+			model.eval()
+			y_validation_prediction = model(x_validation)
+			loss = criterion(y_validation_prediction,y_validation_lstm)
+			print(f"Epoch {t} {self.loss_function}  {loss.detach().item()}")
+			hist_val[t] = loss.detach().item()
 
 		training_time = time.time() - start_time
 		print(f"Training time: {training_time}")
@@ -97,7 +104,7 @@ class LstmMVInput:
 
 		validation_predict_plot = np.empty_like(self.data.iloc[:, -1])
 		validation_predict_plot[:] = np.nan
-		validation_predict_plot[len(y_train_prediction.flatten()) + self.lookback +9 : len(self.data) ] = y_validation_prediction.flatten()
+		validation_predict_plot[len(y_train_prediction.flatten()) + self.lookback + 9: len(self.data) ] = y_validation_prediction.flatten()
 
 		fig, axs = plt.subplots(2)
 
@@ -106,11 +113,12 @@ class LstmMVInput:
 		axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
 		axs[0].plot(self.data.iloc[:, -1], color='y', label='Actual Price')
 		axs[0].set_title('Model')
-		# axs[0].set_xlim(len(y_train_prediction) - 25, len(y_train_prediction) + 50)
-		axs[0].set_xlim(len(self.data)-50, len(self.data)+100)
+		axs[0].set_xlim(len(y_train_prediction.flatten()) - 25, len(y_train_prediction.flatten()) + 50)
+		# axs[0].set_xlim(len(self.data)-50, len(self.data)+100)
 		axs[0].legend()
-		axs[1].plot(hist_train, label='Loss')
-		axs[1].plot(hist_val)
+		axs[1].plot(hist_train, label='Training Loss')
+		axs[1].plot(hist_val, label='Validation Loss')
 		axs[1].set_title('Loss')
+		axs[1].legend()
 		plt.show()
 		return 0
