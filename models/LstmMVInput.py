@@ -16,7 +16,6 @@ class LstmMVInput:
 	def __init__(self, loss_function, data,
 				 learning_rate=0.001,
 				 lookback=24,
-				 input_dim=5,
 				 hidden_dim=32,
 				 num_layers=1,
 				 output_dim=24,
@@ -25,7 +24,7 @@ class LstmMVInput:
 		self.loss_function = loss_function
 		self.data = data
 		self.lookback = lookback
-		self.input_dim = len(data.columns)
+		self.input_dim = len(data.columns)-1
 		self.hidden_dim = hidden_dim
 		self.num_layers = num_layers
 		self.output_dim = output_dim
@@ -33,7 +32,9 @@ class LstmMVInput:
 		self.learning_rate = learning_rate
 
 	def run_lstm(self):
-		self.data = self.data[self.data.iloc[:,0]!='Date']
+		self.data = (self.data).loc[:,self.data.columns!='Date'].dropna()
+		self.data = self.data.reset_index(drop=True)
+		
 
 		scaler = MinMaxScaler(feature_range=(-1, 1))
 		labels_scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -95,6 +96,8 @@ class LstmMVInput:
 		y_validation_prediction = labels_scaler.inverse_transform(y_validation_prediction.detach().numpy())
 		y_validation = labels_scaler.inverse_transform(y_validation_lstm.detach().numpy())
 
+
+
 		lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
 		lstm.append(training_time)
 
@@ -104,7 +107,7 @@ class LstmMVInput:
 
 		validation_predict_plot = np.empty_like(self.data.iloc[:, -1])
 		validation_predict_plot[:] = np.nan
-		validation_predict_plot[len(y_train_prediction.flatten()) + self.lookback + 9: len(self.data) ] = y_validation_prediction.flatten()
+		validation_predict_plot[len(y_train_prediction.flatten()) + self.lookback : len(self.data)-13 ] = y_validation_prediction.flatten()
 
 		fig, axs = plt.subplots(2)
 

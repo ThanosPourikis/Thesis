@@ -21,7 +21,6 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
-	isp1_results()
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
 							smp_json = get_json_for_line_fig(df,'Date','SMP'),
@@ -47,34 +46,35 @@ def corrolations():
 @app.route('/Linear')
 def Linear_page():
 	df = get_data('training_data','*')
-	linear = Linear(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'])
+
+	linear = Linear(data=df)
 	
 
 	df['Prediction'], train_score, validation_score = linear.run_linear()
 
 	return render_template('model.jinja', title = 'Linear Model Last 24hours Pediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
+							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
 
 @app.route('/Knn')
 def Knn():
 	df = get_data('training_data','*')
-	KnnR = KnnModel(features=df.iloc[:,:-1],labels=df.loc[:,'SMP'])
+	KnnR = KnnModel(data=df)
 	
 	df['Prediction'], train_score, validation_score = KnnR.run_knn()
 	
 	return render_template('model.jinja', title = 'KnnR Model Last 24hours Pediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df[-24:],'Date',df.columns[-2:]),
+							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
 
 
 @app.route('/Lstm')
 def lstm():
-	# df = get_data('training_data','*')
+	df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
-	df = training_data_with_power()
+	# df = training_data_with_power()
 	lstm_model = LstmMVInput(utils.MAE,df)
 	lstm_model.run_lstm()
 	return render_template('base.jinja')

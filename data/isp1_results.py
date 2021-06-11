@@ -1,14 +1,16 @@
 
-from datetime import datetime
+from datetime import datetime,timedelta
 
 import pandas as pd
 from pandas.core.frame import DataFrame
 import requests
 import os
-
+from pytz import timezone
 
 def isp1_results():
-	dt = datetime.now()
+	dt = datetime.now() + timedelta(days=1)
+	
+	localTz = timezone('CET')
 	yyyy = dt.year
 	mm = dt.month
 	dd = dt.day
@@ -43,13 +45,13 @@ def isp1_results():
 			with open(folder_path + name ,'wb') as xlsx:
 				xlsx.write(requests.get(file['file_path']).content)
 			df[name] = pd.read_excel(folder_path+name)
+		
 
 	
 	for i in df :
 		start_df = df[i][df[i].iloc[:,0] == 'AG_DIMITRIOS1'].index[0] -1
 		end_df = df[i][df[i].iloc[:,0] == 'Total Thermal Production'].index[0]
 		temp = df[i].iloc[start_df:end_df,:-1]
-		temp.to_csv('test.csv',index=False)
 		export = pd.DataFrame()
 		export['Date'] = temp.iloc[0,1:].values
 
@@ -58,15 +60,16 @@ def isp1_results():
 
 		pairs = []
 		for i in range(0,len(export),2):
-			pairs.append(export.iloc[i:i+2,1:].mean(axis=0))
+			pairs.append(export.iloc[i:i+2,1:].mean(axis=0)) #Example (00:00:00 + 00:30:00)/2 -> 00:00:30
 		pairs = pd.DataFrame(pairs)
 		dc = {'DEH' : 0, 'HERON' : 0 ,'ELPEDISON': 0, 'MYTILINEOS' : 0}
 		for i in range(len(pairs.columns)):
 			dc[power_plants[pairs.iloc[:,i].name]] += pairs.iloc[:,i]
 		dc = pd.DataFrame(dc)
-		dc["Date"] = [temp.iloc[0,i] for i in range(1,len(temp.columns), 2)]
+		tempDate = [temp.iloc[0,i] for i in range(1,len(temp.columns), 2)]
+		dc["Date"] = [localTz.localize(x) for x in tempDate]
 		export_df = export_df.append(dc,ignore_index=True)
 
 	cols = list(export_df.columns)
 	export_df = export_df[[cols[-1]] + cols[:-1]]
-	export_df.sort_values(by='Date').reset_index(drop=True).to_csv("power_plants.csv")
+	export_df.sort_values(by='Date').reset_index(drop=True).to_csv("power_generation.csv",index=False)

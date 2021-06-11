@@ -6,14 +6,16 @@ from utils.utils import mean_absolute_error
 
 
 class Linear:
-	def __init__(self, features, labels, validation_size=0.2):
-		self.features = features
-		self.labels = labels
+	def __init__(self, data, validation_size=0.2):
+		self.features = data.loc[:,data.columns!='SMP']
+		self.labels = data.loc[:,data.columns=='SMP']
 		self.validation_size = validation_size
 
 	def run_linear(self):
 
-		del self.features['Date']
+
+		self.features = (self.features).loc[:,self.features.columns!='Date'].dropna()
+
 		x_train, x_validate, y_train, y_validate = train_test_split(self.features, self.labels, random_state=96,
 																	test_size=self.validation_size, shuffle=True)
 		lr = LinearRegression().fit(x_train, y_train)

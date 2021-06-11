@@ -7,7 +7,7 @@
 __pycache__/
 .idea/dataSources.local.xml
 .idea/dataSources.xml
-.vscode/launch.json
+.vscode
 data/__pycache__/model_data.cpython-38.pyc
 data/__pycache__/sliding_windows.cpython-38.pyc
 data/__pycache__/training_data.cpython-38.pyc
