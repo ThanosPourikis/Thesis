@@ -107,7 +107,7 @@ class LstmMVInput:
 
 		validation_predict_plot = np.empty_like(self.data.iloc[:, -1])
 		validation_predict_plot[:] = np.nan
-		validation_predict_plot[len(y_train_prediction.flatten()) + self.lookback : len(self.data)-13 ] = y_validation_prediction.flatten()
+		validation_predict_plot[len(y_train_prediction.flatten()) : len(self.data)-33 ] = y_validation_prediction.flatten()
 
 		fig, axs = plt.subplots(2)
 

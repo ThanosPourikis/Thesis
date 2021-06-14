@@ -44,6 +44,7 @@ def training_data():
 	dataframe = dataframe.dropna()
 	dataframe.to_csv('data_for_training.csv')
 	save_df_to_db(dataframe=dataframe, df_name='training_data')
+	dataframe['Date'] = dataframe.index
 	return dataframe
 
 
@@ -53,6 +54,7 @@ def training_data_extended_features_list():
 	dataframe = data.set_index('Date').join(smp.set_index('Date'))
 	dataframe.to_csv('data_for_training_extended_features_list.csv')
 	save_df_to_db(dataframe=dataframe, df_name='data_for_training_extended_features_list')
+	dataframe['Date'] = dataframe.index
 	return dataframe
 
 def training_data_with_power():
@@ -62,4 +64,5 @@ def training_data_with_power():
 	dataframe =  data.set_index('Date').join(power.set_index('Date')).join(smp.set_index('Date'))
 	dataframe.to_csv('data_for_training_power_generation.csv',)
 	save_df_to_db(dataframe=dataframe, df_name='data_for_training_power_generation')
+	dataframe['Date'] = dataframe.index
 	return dataframe

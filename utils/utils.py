@@ -57,7 +57,7 @@ def get_conn():
 
 def save_df_to_db(dataframe, df_name):
 	connection = get_conn()
-	dataframe.to_sql(df_name, connection, if_exists='replace', index=0)
+	dataframe.to_sql(df_name, connection, if_exists='replace')
 
 
 def get_data(table, columns):

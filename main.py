@@ -7,7 +7,7 @@ from models.KnnModel import KnnModel
 from models.Linear import Linear
 from models.KnnModel import KnnModel
 from data.model_data import target_model_data
-from data.isp1_results import isp1_results
+from data.isp1_results import get_power_generation,get_hydro_data
 import flask
 import sqlalchemy
 from flask import render_template
@@ -21,6 +21,7 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
+
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
 							smp_json = get_json_for_line_fig(df,'Date','SMP'),
@@ -35,12 +36,15 @@ def index():
 def corrolations():
 
 	df = get_data('training_data','*')
+	
+	hydro = pd.read_csv('mandatory_hydro.csv').set_index('Date').join((pd.read_csv('SMP_VALUES.csv').set_index('Date')))
 	return render_template('correlation.jinja',title = 'Correlation',
 							res_total_json = get_json_for_fig_scatter(df,'Res_Total','SMP'),
 							load_total_json = get_json_for_fig_scatter(df,'Load Total','SMP'),
 							hydro_total_json = get_json_for_fig_scatter(df,'Hydro Total','SMP'),
 							sum_imports_json = get_json_for_fig_scatter(df,'sum_imports','SMP'),
 							sum_exports_json = get_json_for_fig_scatter(df,'sum_exports','SMP'),
+							man_hydro_json = get_json_for_fig_scatter(hydro,'Mandatory Hydro Injections','SMP')
 							)
 
 @app.route('/Linear')
@@ -70,11 +74,24 @@ def Knn():
 							validation_score = validation_score)
 
 
+@app.route('/XgB')
+def XgB():
+	df = get_data('training_data','*')
+	KnnR = KnnModel(data=df)
+	
+	df['Prediction'], train_score, validation_score = KnnR.run_knn()
+	
+	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Pediction vs Actual Price',
+							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
+							train_score= train_score,
+							validation_score = validation_score)
+
 @app.route('/Lstm')
 def lstm():
 	df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
 	# df = training_data_with_power()
+	df = df.set_index('Date').join(pd.read_csv('mandatory_hydro.csv').set_index('Date'))
 	lstm_model = LstmMVInput(utils.MAE,df)
 	lstm_model.run_lstm()
 	return render_template('base.jinja')
