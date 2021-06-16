@@ -1,3 +1,4 @@
+from math import nan
 from sklearn import utils
 from models.LstmMVInput import LstmMVInput
 import pandas as pd
@@ -54,21 +55,27 @@ def Linear_page():
 	linear = Linear(data=df)
 	
 
-	df['Prediction'], train_score, validation_score = linear.run_linear()
+	prediction, train_score, validation_score = linear.run()
+	df['Prediction'] = nan
+	df[-len(prediction):]['Prediction'] = prediction
+	df = df.dropna()
 
-	return render_template('model.jinja', title = 'Linear Model Last 24hours Pediction vs Actual Price',
+	return render_template('model.jinja', title = 'Linear Model Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
 
-@app.route('/Knn')
+@app.route('/KnnR')
 def Knn():
 	df = get_data('training_data','*')
 	KnnR = KnnModel(data=df)
 	
-	df['Prediction'], train_score, validation_score = KnnR.run_knn()
-	
-	return render_template('model.jinja', title = 'KnnR Model Last 24hours Pediction vs Actual Price',
+	prediction, train_score, validation_score = KnnR.run()
+	df['Prediction'] = nan
+	df[-len(prediction):]['Prediction'] = prediction
+	df = df.dropna()
+
+	return render_template('model.jinja', title = 'KnnR Model Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
@@ -81,7 +88,7 @@ def XgB():
 	
 	df['Prediction'], train_score, validation_score = KnnR.run_knn()
 	
-	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Pediction vs Actual Price',
+	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
@@ -91,10 +98,22 @@ def lstm():
 	df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
 	# df = training_data_with_power()
-	df = df.set_index('Date').join(pd.read_csv('mandatory_hydro.csv').set_index('Date'))
+	# df = df.set_index('Date').join(pd.read_csv('mandatory_hydro.csv').set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
 	lstm_model = LstmMVInput(utils.MAE,df)
-	lstm_model.run_lstm()
-	return render_template('base.jinja')
+	y_validation_prediction,hist_train,hist_val,lstm = lstm_model.run_lstm()
+	df['Prediction'] = nan
+	df[-len(y_validation_prediction):]['Prediction'] = y_validation_prediction
+	df = df.dropna()
+	hist = pd.DataFrame({'hist_train': hist_train ,'hist_val':hist_val})
+
+	return render_template('lstm.jinja',title = 'Lstm Last 24hour Prediction vs Actual',
+												train_score = lstm[0],
+												validation_score = lstm[1],
+												train_time = lstm[2],
+												chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
+												hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val'])
+
+												)
 
 
 if __name__ == '__main__':

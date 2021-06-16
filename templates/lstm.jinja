@@ -1,0 +1,13 @@
+{% extends "model.jinja" %}
+{% block more_data %}
+<br>
+<h3>Train Time : {{train_time}}</h3>
+<div id="hist_json"></div>
+
+<script>
+	var graph = {{ hist_json | safe }};
+	Plotly.plot('hist_json', graph, {});
+</script>
+
+{% endblock more_data %}
+
