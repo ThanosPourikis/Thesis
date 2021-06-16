@@ -29,6 +29,7 @@ def get_excel_data():
 
 
 	data = requests.get(url)
+
 	for file in data.json():
 		name = file['file_path'].split('/')[-1]
 		if os.path.exists(folder_path+name):
@@ -39,6 +40,8 @@ def get_excel_data():
 			with open(folder_path + name ,'wb') as xlsx:
 				xlsx.write(requests.get(file['file_path']).content)
 			df[name] = pd.read_excel(folder_path+name)
+	return df
+
 
 
 def get_power_generation():
