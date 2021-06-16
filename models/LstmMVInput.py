@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from models.lstm_model import LSTM
 from data.sliding_windows import split_data
-from utils.utils import loss_function_selection, error_calculation
+from utils.utils import loss_function_selection, error_calculation,plot_lstm
 
 
 class LstmMVInput:
@@ -101,27 +101,8 @@ class LstmMVInput:
 		lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
 		lstm.append(training_time)
 
-		train_predict_plot = np.empty_like(self.data.iloc[:, -1])
-		train_predict_plot[:] = np.nan
-		train_predict_plot[self.lookback:len(y_train_prediction.flatten()) + self.lookback] = y_train_prediction.flatten()
 
-		validation_predict_plot = np.empty_like(self.data.iloc[:, -1])
-		validation_predict_plot[:] = np.nan
-		validation_predict_plot[len(y_train_prediction.flatten()) : len(self.data)-33 ] = y_validation_prediction.flatten()
 
-		fig, axs = plt.subplots(2)
+		# plot_lstm(self.data,self.lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val) # Debug Function
 
-		axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
-
-		axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
-		axs[0].plot(self.data.iloc[:, -1], color='y', label='Actual Price')
-		axs[0].set_title('Model')
-		axs[0].set_xlim(len(y_train_prediction.flatten()) - 25, len(y_train_prediction.flatten()) + 50)
-		# axs[0].set_xlim(len(self.data)-50, len(self.data)+100)
-		axs[0].legend()
-		axs[1].plot(hist_train, label='Training Loss')
-		axs[1].plot(hist_val, label='Validation Loss')
-		axs[1].set_title('Loss')
-		axs[1].legend()
-		plt.show()
-		return 0
+		return y_validation_prediction.flatten().tolist(),hist_train,hist_val,lstm
