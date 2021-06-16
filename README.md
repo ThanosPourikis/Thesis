@@ -14,4 +14,4 @@ pending
 
 Lstm Model
 
-pending
+![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/lstm.png)
