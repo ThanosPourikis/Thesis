@@ -29,7 +29,6 @@ def get_excel_data():
 
 
 	data = requests.get(url)
-
 	for file in data.json():
 		name = file['file_path'].split('/')[-1]
 		if os.path.exists(folder_path+name):
@@ -40,11 +39,14 @@ def get_excel_data():
 			with open(folder_path + name ,'wb') as xlsx:
 				xlsx.write(requests.get(file['file_path']).content)
 			df[name] = pd.read_excel(folder_path+name)
-	return df
+	print('Getting Power Gen data')
+	get_power_generation(df)
+	print('Getting Power Req data')
+	get_data(df)
 
 
 
-def get_power_generation():
+def get_power_generation(df):
 
 	export_df = pd.DataFrame()
 	power_plants = {'AG_DIMITRIOS1' : 'DEH', 'AG_DIMITRIOS2': 'DEH', 'AG_DIMITRIOS3': 'DEH', 'AG_DIMITRIOS4': 'DEH', 'AG_DIMITRIOS5': 'DEH', 'KARDIA3': 'DEH', 
@@ -53,8 +55,6 @@ def get_power_generation():
 	'HERON1' : 'HERON', 'HERON2'  : 'HERON' , 'HERON3'  : 'HERON' , 'HERON_CC'  : 'HERON',
 	'ELPEDISON_THESS' : 'ELPEDISON', 'ELPEDISON_THISVI' : 'ELPEDISON',
 	'ALOUMINIO' : 'MYTILINEOS', 'PROTERGIA_CC' : 'MYTILINEOS', 'KORINTHOS_POWER' : 'MYTILINEOS'}
-		
-	df = get_excel_data()
 	
 	for i in df :
 
@@ -84,15 +84,29 @@ def get_power_generation():
 	export_df.set_index('Date').sort_index().to_csv('power_generation.csv')
 
 
-def get_hydro_data():
-
-	df = get_excel_data()
-
+def get_data(df):
+	export_df = pd.DataFrame()
 	for i in  df:
+		temp = pd.DataFrame()
 		start_df = df[i][df[i].iloc[:,0] == 'System Overview'].index[0]
-		end_df = df[i][df[i].iloc[:,0] == 'Mandatory Hydro Injections'].index[0]+1
+		end_df = df[i][df[i].iloc[:,0] == 'Renewables'].index[0]+1
+		load_total = df[i][df[i].iloc[:,0]== 'System Load+Losses'].index[0]
+
+	
 
 		temp = df[i].iloc[start_df:end_df,:-1]
+		temp = temp.append(df[i].iloc[load_total,:-1])
+		
+		req_start = df[i][df[i].iloc[:,0] == 'FCR Up'].index[0]
+		req_end = df[i][df[i].iloc[:,0] == 'Spinning RR Up'].index[0]
+
+		temp = temp.append(df[i].iloc[req_start:req_end,:-1].sum(),ignore_index=True)
+		
+		req_start = df[i][df[i].iloc[:,0] == 'FCR Down'].index[0]
+		req_end = df[i][df[i].iloc[:,0] == 'Spinning RR Down'].index[0]
+
+		temp = temp.append(df[i].iloc[req_start:req_end,:-1].sum(),ignore_index=True)
+
 		export = pd.DataFrame()
 		export['Date'] = temp.iloc[0,1:].values
 
@@ -107,4 +121,6 @@ def get_hydro_data():
 		pairs["Date"] = [localTz.localize(x) for x in tempDate]
 		export_df = export_df.append(pairs,ignore_index=True)
 
-	export_df.set_index('Date').sort_index().to_csv('mandatory_hydro.csv')
+	export_df.columns = ['Mandatory_Hydro','Renewables','System Load','imports','export','Date']
+	export_df.set_index('Date').sort_index().to_csv('power.csv')
+	
