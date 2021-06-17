@@ -95,10 +95,10 @@ def XgB():
 
 @app.route('/Lstm')
 def lstm():
-	df = get_data('training_data','*')
+	# df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
 	# df = training_data_with_power()
-	# df = df.set_index('Date').join(pd.read_csv('mandatory_hydro.csv').set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
+	df = (pd.read_csv('SMP_VALUES.csv').set_index(0).set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
 	lstm_model = LstmMVInput(utils.MAE,df)
 	y_validation_prediction,hist_train,hist_val,lstm = lstm_model.run_lstm()
 	df['Prediction'] = nan

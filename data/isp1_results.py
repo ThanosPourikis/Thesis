@@ -78,7 +78,7 @@ def get_power_generation():
 			dc[power_plants[pairs.iloc[:,i].name]] += pairs.iloc[:,i]# Dictonary[NameOfPlant]  -> Comapany += Produdaction
 		dc = pd.DataFrame(dc)
 		tempDate = [temp.iloc[0,i] for i in range(1,len(temp.columns), 2)]
-		dc["Date"] = [localTz.localize(x) for x in tempDate]
+		dc['Date'] = [localTz.localize(x) for x in tempDate]
 		export_df = export_df.append(dc,ignore_index=True)
 
 	export_df.set_index('Date').sort_index().to_csv('power_generation.csv')
@@ -108,6 +108,3 @@ def get_hydro_data():
 		export_df = export_df.append(pairs,ignore_index=True)
 
 	export_df.set_index('Date').sort_index().to_csv('mandatory_hydro.csv')
- 
-
-
