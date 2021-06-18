@@ -1,3 +1,5 @@
+from data.isp1_results import get_excel_data
+from data.get_SMP_data import get_SMP_data
 import datetime
 from os import path
 
@@ -66,3 +68,14 @@ def training_data_with_power():
 	save_df_to_db(dataframe=dataframe, df_name='data_for_training_power_generation')
 	dataframe['Date'] = dataframe.index
 	return dataframe
+
+def update_data(new_files = False):
+	print('Don\'t panic if it looks frozen')
+	get_SMP_data(new_files)
+	smp = pd.read_csv('SMP.csv').set_index('Date')
+	get_excel_data()
+	power = pd.read_csv('power.csv').set_index('Date')
+	gen = pd.read_csv('power_generation.csv').set_index('Date')
+	export = smp.join(power).join(gen).dropna()
+	save_df_to_db(export,'training_data')
+	

@@ -1,5 +1,5 @@
 import math
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 import numpy as np
 
 import pandas as pd
@@ -80,27 +80,27 @@ def get_json_for_fig_scatter(df,x,y):
 
 
 
-def plot_lstm(data,lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val):
-	train_predict_plot = np.empty_like(data.iloc[:, -1])
-	train_predict_plot[:] = np.nan
-	train_predict_plot[lookback:len(y_train_prediction.flatten()) + lookback] = y_train_prediction.flatten()
+# def plot_lstm(data,lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val):
+# 	train_predict_plot = np.empty_like(data.iloc[:, -1])
+# 	train_predict_plot[:] = np.nan
+# 	train_predict_plot[lookback:len(y_train_prediction.flatten()) + lookback] = y_train_prediction.flatten()
 
-	validation_predict_plot = np.empty_like(data.iloc[:, -1])
-	validation_predict_plot[:] = np.nan
-	validation_predict_plot[len(y_train_prediction.flatten()) + lookback : (int(len(data)/24)*24) ] = y_validation_prediction.flatten()
+# 	validation_predict_plot = np.empty_like(data.iloc[:, -1])
+# 	validation_predict_plot[:] = np.nan
+# 	validation_predict_plot[len(y_train_prediction.flatten()) + lookback : (int(len(data)/24)*24) ] = y_validation_prediction.flatten()
 
-	fig, axs = plt.subplots(2)
+# 	fig, axs = plt.subplots(2)
 
-	axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
+# 	axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
 
-	axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
-	axs[0].plot(data.iloc[:, -1], color='y', label='Actual Price')
-	axs[0].set_title('Model')
-	axs[0].set_xlim(len(y_train_prediction.flatten()) - 25, len(y_train_prediction.flatten()) + 50)
-	# axs[0].set_xlim(len(data)-50, len(data)+100)
-	axs[0].legend()
-	axs[1].plot(hist_train, label='Training Loss')
-	axs[1].plot(hist_val, label='Validation Loss')
-	axs[1].set_title('Loss')
-	axs[1].legend()
-	plt.show()
+# 	axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
+# 	axs[0].plot(data.iloc[:, -1], color='y', label='Actual Price')
+# 	axs[0].set_title('Model')
+# 	axs[0].set_xlim(len(y_train_prediction.flatten()) - 25, len(y_train_prediction.flatten()) + 50)
+# 	# axs[0].set_xlim(len(data)-50, len(data)+100)
+# 	axs[0].legend()
+# 	axs[1].plot(hist_train, label='Training Loss')
+# 	axs[1].plot(hist_val, label='Validation Loss')
+# 	axs[1].set_title('Loss')
+# 	axs[1].legend()
+# 	plt.show()

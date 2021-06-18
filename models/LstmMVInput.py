@@ -3,13 +3,12 @@ from os import path
 
 import numpy as np
 import torch
-from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
 
 from models.lstm_model import LSTM
 from data.sliding_windows import split_data
-from utils.utils import loss_function_selection, error_calculation,plot_lstm
+from utils.utils import loss_function_selection, error_calculation
 
 
 class LstmMVInput:
@@ -24,16 +23,17 @@ class LstmMVInput:
 		self.loss_function = loss_function
 		self.data = data
 		self.lookback = lookback
-		self.input_dim = len(data.columns)-1
+		
 		self.hidden_dim = hidden_dim
 		self.num_layers = num_layers
 		self.output_dim = output_dim
 		self.num_epochs = num_epochs
 		self.learning_rate = learning_rate
 
-	def run_lstm(self):
+	def run(self):
 		self.data = (self.data).loc[:,self.data.columns!='Date'].dropna()
 		self.data = self.data.reset_index(drop=True)
+		self.input_dim = len(self.data.columns)
 		
 
 		scaler = MinMaxScaler(feature_range=(-1, 1))

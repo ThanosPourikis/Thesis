@@ -2,13 +2,13 @@ from math import nan
 from sklearn import utils
 from models.LstmMVInput import LstmMVInput
 import pandas as pd
-from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list,training_data_with_power
+from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list,training_data_with_power, update_data
 
 from models.KnnModel import KnnModel
 from models.Linear import Linear
 from models.KnnModel import KnnModel
 from data.model_data import target_model_data
-from data.isp1_results import get_power_generation,get_hydro_data
+from data.isp1_results import get_excel_data
 import flask
 import sqlalchemy
 from flask import render_template
@@ -22,7 +22,6 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
-
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
 							smp_json = get_json_for_line_fig(df,'Date','SMP'),
@@ -86,7 +85,7 @@ def XgB():
 	df = get_data('training_data','*')
 	KnnR = KnnModel(data=df)
 	
-	df['Prediction'], train_score, validation_score = KnnR.run_knn()
+	df['Prediction'], train_score, validation_score = KnnR.run()
 	
 	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
@@ -95,12 +94,12 @@ def XgB():
 
 @app.route('/Lstm')
 def lstm():
-	# df = get_data('training_data','*')
+	df = get_data('training_data','*')
 	# df = pd.read_csv('training_data_no_missing_values.csv')
 	# df = training_data_with_power()
-	df = (pd.read_csv('SMP_VALUES.csv').set_index(0).set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
+	# df = (pd.read_csv('SMP.csv').set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
 	lstm_model = LstmMVInput(utils.MAE,df)
-	y_validation_prediction,hist_train,hist_val,lstm = lstm_model.run_lstm()
+	y_validation_prediction,hist_train,hist_val,lstm = lstm_model.run()
 	df['Prediction'] = nan
 	df[-len(y_validation_prediction):]['Prediction'] = y_validation_prediction
 	df = df.dropna()
@@ -112,7 +111,6 @@ def lstm():
 												train_time = lstm[2],
 												chart_json = get_json_for_line_fig(df[-24:],'Date',['SMP','Prediction']),
 												hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val'])
-
 												)
 
 
