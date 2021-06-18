@@ -2,7 +2,7 @@ from math import nan
 from sklearn import utils
 from models.LstmMVInput import LstmMVInput
 import pandas as pd
-from data.training_data import training_data, training_data_no_missing_values,training_data_extended_features_list,training_data_with_power, update_data
+from data.training_data import update_data
 
 from models.KnnModel import KnnModel
 from models.Linear import Linear
@@ -25,26 +25,23 @@ def index():
 	df = get_data('training_data','*')
 	return render_template('home.jinja',title = 'Original Data',
 							smp_json = get_json_for_line_fig(df,'Date','SMP'),
-							res_total_json = get_json_for_line_fig(df,'Date','Res_Total'),
-							load_total_json = get_json_for_line_fig(df,'Date','Load Total'),
-							hydro_total_json = get_json_for_line_fig(df,'Date','Hydro Total'),
-							sum_imports_json = get_json_for_line_fig(df,'Date','sum_imports'),
-							sum_exports_json = get_json_for_line_fig(df,'Date','sum_exports'),
+							res_total_json = get_json_for_line_fig(df,'Date','Renewables'),
+							load_total_json = get_json_for_line_fig(df,'Date','System Load'),
+							hydro_total_json = get_json_for_line_fig(df,'Date','Mandatory_Hydro'),
+							sum_imports_json = get_json_for_line_fig(df,'Date','imports'),
+							sum_exports_json = get_json_for_line_fig(df,'Date','export'),
 							)
 
 @app.route('/Correlation')
 def corrolations():
 
 	df = get_data('training_data','*')
-	
-	hydro = pd.read_csv('mandatory_hydro.csv').set_index('Date').join((pd.read_csv('SMP_VALUES.csv').set_index('Date')))
 	return render_template('correlation.jinja',title = 'Correlation',
-							res_total_json = get_json_for_fig_scatter(df,'Res_Total','SMP'),
-							load_total_json = get_json_for_fig_scatter(df,'Load Total','SMP'),
-							hydro_total_json = get_json_for_fig_scatter(df,'Hydro Total','SMP'),
-							sum_imports_json = get_json_for_fig_scatter(df,'sum_imports','SMP'),
-							sum_exports_json = get_json_for_fig_scatter(df,'sum_exports','SMP'),
-							man_hydro_json = get_json_for_fig_scatter(hydro,'Mandatory Hydro Injections','SMP')
+							res_total_json = get_json_for_fig_scatter(df,'Renewables','SMP'),
+							load_total_json = get_json_for_fig_scatter(df,'System Load','SMP'),
+							hydro_total_json = get_json_for_fig_scatter(df,'Mandatory_Hydro','SMP'),
+							sum_imports_json = get_json_for_fig_scatter(df,'imports','SMP'),
+							sum_exports_json = get_json_for_fig_scatter(df,'export','SMP'),
 							)
 
 @app.route('/Linear')
@@ -95,9 +92,9 @@ def XgB():
 @app.route('/Lstm')
 def lstm():
 	df = get_data('training_data','*')
-	# df = pd.read_csv('training_data_no_missing_values.csv')
+	# df = pd.read_csv('datasets/training_data_no_missing_values.csv')
 	# df = training_data_with_power()
-	# df = (pd.read_csv('SMP.csv').set_index('Date')).join(pd.read_csv('power_generation.csv').set_index('Date'))
+	# df = (pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/power_generation.csv').set_index('Date'))
 	lstm_model = LstmMVInput(utils.MAE,df)
 	y_validation_prediction,hist_train,hist_val,lstm = lstm_model.run()
 	df['Prediction'] = nan

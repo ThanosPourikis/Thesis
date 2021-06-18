@@ -7,6 +7,8 @@
 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 		<link rel="shortcut icon" href="{{url_for('static',filename = 'favicon.png')}}">
 </head>
+
+<body>
 <nav class="nav justify-content-center fixed-top navbar-dark bg-dark">
 	<a class="nav-link" href="/">Original Data</a>
 	<a class="nav-link" href="Correlation">Correlation</a>
@@ -15,9 +17,7 @@
 	<a class="nav-link" href="XgB">XgBoost</a>
 	<a class="nav-link" href="Lstm">Lstm</a>
 </nav>
-
-
-<body>
+<br><br>
 {%block content%}
 {%endblock%}
 </body>

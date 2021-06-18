@@ -27,7 +27,7 @@ def get_SMP_data(new_files = True):
 		export= export.append(temp,ignore_index=True)
 
 	export.columns = ['SMP','Date']
-	export.set_index('Date').sort_index().to_csv('SMP.csv')
+	export.set_index('Date').sort_index().to_csv('datasets/SMP.csv')
 	
 
 	

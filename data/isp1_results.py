@@ -81,7 +81,7 @@ def get_power_generation(df):
 		dc['Date'] = [localTz.localize(x) for x in tempDate]
 		export_df = export_df.append(dc,ignore_index=True)
 
-	export_df.set_index('Date').sort_index().to_csv('power_generation.csv')
+	export_df.set_index('Date').sort_index().to_csv('datasets/power_generation.csv')
 
 
 def get_data(df):
@@ -122,5 +122,5 @@ def get_data(df):
 		export_df = export_df.append(pairs,ignore_index=True)
 
 	export_df.columns = ['Mandatory_Hydro','Renewables','System Load','imports','export','Date']
-	export_df.set_index('Date').sort_index().to_csv('power.csv')
+	export_df.set_index('Date').sort_index().to_csv('datasets/power.csv')
 	
