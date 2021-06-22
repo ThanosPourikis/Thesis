@@ -3,11 +3,12 @@
 	<h1>{{title}}</h1>
 
 	{% include "charts.jinja" %}
-		<div id="man_hydro"></div>
+	
+<div id="man_hydro">
 	<script>
 		var graph = {{ man_hydro_json | safe }};
 		Plotly.plot('man_hydro', graph, {});
 	</script>
-
+</div>
 {% endblock content %}
 

@@ -18,12 +18,7 @@ MSE = 'MSE'
 MAE = 'MAE'
 HuberLoss = 'HuberLoss'
 
-extended_features_list = ['Date', 'Res_Total', 'Load Total', 'Hydro Total', 'sum_imports', 'sum_exports',
-				 'weekdays', 'weekdays0', 'bankdays', 'bankdays0', 'winter', 'spring', 'autumn',
-				 'summer', 't1_weekdays', ' t1_weekdays0', 't1_bankdays', 't1_bankdays0',
-				 't1_winter', 't1_spring', 't1_autumn', 't1_summer', 'SMP']
-
-features_list = ['Res_Total','Load Total','Hydro Total','Date','sum_imports','sum_exports','SMP']
+#features_list = ['Res_Total','Load Total','Hydro Total','Date','sum_imports','sum_exports','SMP']
 
 def error_calculation(function, y_train, y_train_prediction, y_validation, y_validation_prediction):
 	if MAE == function:
@@ -73,7 +68,7 @@ def get_json_for_line_fig(df,x,y):
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 def get_json_for_fig_scatter(df,x,y):
-	fig = px.scatter(df,x=x,y=y,trendline="ols")
+	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')
 	fig.update_layout(width=1500, height=500)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
