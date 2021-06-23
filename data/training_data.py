@@ -75,6 +75,7 @@ def update_data(new_files = False):
 	get_excel_data()
 	power = pd.read_csv('datasets/power.csv').set_index('Date')
 	gen = pd.read_csv('datasets/power_generation.csv').set_index('Date')
-	export = smp.join(power).join(gen).dropna()
+	export = power.join(gen).join(smp).dropna()
+	
 	save_df_to_db(export,'training_data')
 	

@@ -27,7 +27,7 @@ def error_calculation(function, y_train, y_train_prediction, y_validation, y_val
 		print('Train Score: %.2f MAE' % train_score)
 		test_score = mean_absolute_error(y_validation_prediction.flatten(), y_validation.flatten())
 		print('Validation Score: %.2f MAE' % test_score)
-		return[train_score,test_score]
+		return train_score,test_score
 
 	elif MSE == function:
 		# calculate root mean squared error
@@ -35,7 +35,7 @@ def error_calculation(function, y_train, y_train_prediction, y_validation, y_val
 		print('Train Score: %.2f RMSE' % train_score)
 		test_score = math.sqrt(mean_squared_error(y_validation_prediction.flatten(), y_validation.flatten()))
 		print('Validation Score: %.2f RMSE' % test_score)
-	return [train_score, test_score]
+	return train_score, test_score
 
 
 def loss_function_selection(function):
@@ -59,8 +59,10 @@ def save_df_to_db(dataframe, df_name):
 
 def get_data(table, columns):
 	connection = get_conn()
-	return pd.read_sql(f'SELECT {columns} FROM {table}', connection)
-
+	try:
+		return pd.read_sql(f'SELECT {columns} FROM {table}', connection,index_col='index')
+	except :
+		return pd.read_sql(f'SELECT {columns} FROM {table}', connection)
 def get_json_for_line_fig(df,x,y):
 	fig = px.line(df,x=x,y=y)
 	fig = fig.update_xaxes(rangeslider_visible=True)

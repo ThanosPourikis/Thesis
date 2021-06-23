@@ -4,11 +4,12 @@ from os import path
 import numpy as np
 import torch
 from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
 
 
 from models.lstm_model import LSTM
 from data.sliding_windows import split_data
-from utils.utils import loss_function_selection, error_calculation
+from utils.utils import loss_function_selection, error_calculation, save_df_to_db
 
 
 class LstmMVInput:
@@ -18,7 +19,7 @@ class LstmMVInput:
 				 hidden_dim=32,
 				 num_layers=1,
 				 output_dim=24,
-				 num_epochs=500):
+				 num_epochs=150):
 
 		self.loss_function = loss_function
 		self.data = data
@@ -70,8 +71,8 @@ class LstmMVInput:
 			model.train()
 			y_train_prediction = model(x_train)
 			loss = criterion(y_train_prediction, y_train_lstm)
-			print(f"Epoch {t} {self.loss_function}  {loss.detach().item()}")
-			hist_train[t] = loss.item()
+			print(f"Epoch Training\t\t {t} {self.loss_function}  {loss.detach().item()}")
+			hist_train[t] = loss.detach().item()
 			optimiser.zero_grad()
 			loss.backward()
 			optimiser.step()
@@ -80,7 +81,7 @@ class LstmMVInput:
 			model.eval()
 			y_validation_prediction = model(x_validation)
 			loss = criterion(y_validation_prediction,y_validation_lstm)
-			print(f"Epoch {t} {self.loss_function}  {loss.detach().item()}")
+			print(f"Epoch Validation\t {t} {self.loss_function}  {loss.detach().item()}")
 			hist_val[t] = loss.detach().item()
 
 		training_time = time.time() - start_time
@@ -97,12 +98,16 @@ class LstmMVInput:
 		y_validation = labels_scaler.inverse_transform(y_validation_lstm.detach().numpy())
 
 
-
-		lstm = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
-		lstm.append(training_time)
-
+		train , val = error_calculation(self.loss_function, y_train, y_train_prediction, y_validation, y_validation_prediction)
+		lstm = pd.DataFrame({'train': train, 'val' : val, 'time':training_time},index = [0])
+		
 
 
 		# plot_lstm(self.data,self.lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val) # Debug Function
-
-		return y_validation_prediction.flatten().tolist(),hist_train,hist_val,lstm
+		save_df_to_db(pd.DataFrame(y_validation_prediction,),'lstmPrediction')
+		hist = pd.DataFrame()
+		hist['train'] = hist_train
+		hist['val'] = hist_val
+		save_df_to_db(hist,'lstm_hist')
+		save_df_to_db(lstm,'lstm_metrics')
+		return y_validation_prediction.flatten().tolist(),hist,lstm

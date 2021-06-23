@@ -34,8 +34,8 @@ def split_data(data, lookForward =24, validation_size=0.2):
 
     validate_size = int(len(data) * validation_size)
     train_size = len(data) - validate_size
-    y_train = np.array([data.iloc[i: i + lookForward, -1] for i in range(lookForward, train_size+24, lookForward)])
-    y_validate = np.array([data.iloc[i: i + lookForward, -1] for i in range(train_size+24, (int(len(data)/24)*24), lookForward)][:-1])
+    y_train = np.array([data.iloc[i: i + lookForward,data.columns =='SMP'] for i in range(lookForward, train_size+24, lookForward)]).squeeze()
+    y_validate = np.array([data.iloc[i: i + lookForward,data.columns =='SMP'] for i in range(train_size+24, (int(len(data)/24)*24), lookForward)][:-1]).squeeze()
 
     x_train = np.array([data.iloc[i: i + lookForward] for i in range(0, train_size, lookForward)])
     x_validate = np.array([data.iloc[i: i + lookForward] for i in range(train_size, (int(len(data)/24)*24)-24, lookForward)][:-1])
