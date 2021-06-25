@@ -1,44 +1,17 @@
-{% block charts %}
+{% extends 'base.jinja' %}
 
-<div id="SMP">
+{% block content %}
+	<h1>{{title}}</h1>
+	{% for i in df.columns %}
+	<div id='{{i}}'>
 	<script>
-		var graph = {{ smp_json | safe }};
-		Plotly.plot('SMP', graph, {});
+		var graph = {{ get_json(df,y,i) | safe }};
+		Plotly.plot('{{i}}', graph, {});
 	</script>
 </div>
+{% endfor %}
+{% endblock content %}
 
-<div id="Res_Total">
-	<script>
-		var graph = {{ res_total_json | safe }};
-		Plotly.plot('Res_Total', graph, {});
-	</script>
-</div>
 
-<div id="load_total">
-	<script>
-		var graph = {{ load_total_json | safe }};
-		Plotly.plot('load_total', graph, {});
-	</script>
-</div>
 
-<div id="hydro_total">
-	<script>
-		var graph = {{ hydro_total_json | safe }};
-		Plotly.plot('hydro_total', graph, {});
-	</script>
-</div>
 
-<div id="sum_imports">
-	<script>
-		var graph = {{ sum_imports_json | safe }};
-		Plotly.plot('sum_imports', graph, {});
-	</script>
-</div>
-
-<div id="sum_exports">
-	<script>
-		var graph = {{ sum_exports_json | safe }};
-		Plotly.plot('sum_exports', graph, {});
-	</script>
-</div>
-{% endblock charts %}}

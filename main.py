@@ -23,27 +23,16 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
-	update_data(True)
 	df = get_data('training_data','*')
-	return render_template('home.jinja',title = 'Original Data',
-							smp_json = get_json_for_line_fig(df,'Date','SMP'),
-							res_total_json = get_json_for_line_fig(df,'Date','Renewables'),
-							load_total_json = get_json_for_line_fig(df,'Date','System Load'),
-							hydro_total_json = get_json_for_line_fig(df,'Date','Mandatory_Hydro'),
-							sum_imports_json = get_json_for_line_fig(df,'Date','imports'),
-							sum_exports_json = get_json_for_line_fig(df,'Date','export'),
-							)
+	return render_template('charts.jinja',title = 'Original Data',df=df,get_json = get_json_for_line_fig,y='Date')
 
 @app.route('/Correlation')
 def corrolations():
 
 	df = get_data('training_data','*')
-	return render_template('correlation.jinja',title = 'Correlation',
-							res_total_json = get_json_for_fig_scatter(df,'Renewables','SMP'),
-							load_total_json = get_json_for_fig_scatter(df,'System Load','SMP'),
-							hydro_total_json = get_json_for_fig_scatter(df,'Mandatory_Hydro','SMP'),
-							sum_imports_json = get_json_for_fig_scatter(df,'imports','SMP'),
-							sum_exports_json = get_json_for_fig_scatter(df,'export','SMP'),
+	df = df.loc[:,df.columns!='Date'].dropna()
+	return render_template('charts.jinja',title = 'Correlation',df=df,y='SMP',get_json = get_json_for_fig_scatter,
+
 							)
 
 @app.route('/Linear')
@@ -107,7 +96,7 @@ def lstm():
 		y_validation_prediction,hist,lstm = lstm_model.run()
 		
 	df['Prediction'] = nan
-	df[-len(y_validation_prediction):]['Prediction'] = y_validation_prediction
+	df[-len(y_validation_prediction[:-24]):]['Prediction'] = y_validation_prediction[:-24]
 	df = df.dropna()
 
 	# hist = pd.DataFrame({'hist_train': hist_train ,'hist_val':hist_val})
