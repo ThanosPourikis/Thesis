@@ -1,15 +1,13 @@
 from data.get_SMP_files import get_SMP_files
 from datetime import timedelta
 from os import listdir
-from multiprocessing import Pool
 import time
-from numpy import column_stack
 import pandas as pd
 from pytz import timezone
 
-def get_SMP_data(new_files = True):
+def get_SMP_data(new_files = True,page = 0):
 	if new_files:
-		get_SMP_files()
+		get_SMP_files(page)
 		
 	localTz = timezone('CET')
 	folder_path = 'smp_files/'
