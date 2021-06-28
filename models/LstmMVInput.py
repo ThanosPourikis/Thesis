@@ -7,15 +7,15 @@ from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
 
-from models.lstm_model import LSTM
+from models.Lstm_model import LSTM
 from data.sliding_windows import split_data
 from utils.utils import loss_function_selection, error_calculation, save_df_to_db
 
 
 class LstmMVInput:
 	def __init__(self, loss_function, data,
-				 learning_rate=0.001,
-				 lookback=24,
+				 learning_rate=0.01,
+				 lookforward=24,
 				 hidden_dim=32,
 				 num_layers=1,
 				 output_dim=24,
@@ -23,7 +23,7 @@ class LstmMVInput:
 
 		self.loss_function = loss_function
 		self.data = data
-		self.lookback = lookback
+		self.lookforward = lookforward
 		
 		self.hidden_dim = hidden_dim
 		self.num_layers = num_layers
@@ -39,7 +39,7 @@ class LstmMVInput:
 
 		scaler = MinMaxScaler(feature_range=(-1, 1))
 		labels_scaler = MinMaxScaler(feature_range=(-1, 1))
-		x_train, y_train, x_validation, y_validation = split_data(self.data, self.lookback)
+		x_train, y_train, x_validation, y_validation = split_data(self.data, self.lookforward)
 
 		x_train = scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
 		x_validation = scaler.transform(x_validation.reshape(-1, x_validation.shape[-1])).reshape(x_validation.shape)
@@ -103,7 +103,7 @@ class LstmMVInput:
 		
 
 
-		# plot_lstm(self.data,self.lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val) # Debug Function
+		# plot_lstm(self.data,self.lookforward,y_train_prediction,y_validation_prediction,hist_train,hist_val) # Debug Function
 		save_df_to_db(pd.DataFrame(y_validation_prediction,),'lstmPrediction')
 		hist = pd.DataFrame()
 		hist['train'] = hist_train
