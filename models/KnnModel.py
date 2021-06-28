@@ -30,4 +30,4 @@ class KnnModel:
 		print(f'Time:{time.time() - start_time}')
 		print(gs.best_params_)
 
-		return gs.predict(self.features[-24:]), mean_absolute_error(y_train, gs.predict(x_train)), mean_absolute_error(y_validate, gs.predict(x_validate))
+		return gs.predict(self.features), mean_absolute_error(y_train, gs.predict(x_train)), mean_absolute_error(y_validate, gs.predict(x_validate))
