@@ -2,21 +2,10 @@
 /Untitled 1.ods
 /lstm_single_input
 /all_files_isp1/
-/all_files_isp1/20210521_ISP1Requirements_01.xlsx
-/Figure_1.png
 __pycache__/
 .idea/dataSources.local.xml
 .idea/dataSources.xml
 .vscode
-data/__pycache__/model_data.cpython-38.pyc
-data/__pycache__/sliding_windows.cpython-38.pyc
-data/__pycache__/training_data.cpython-38.pyc
-models/__pycache__/KnnModel.cpython-38.pyc
-models/__pycache__/Linear.cpython-38.pyc
-models/__pycache__/lstm_model.cpython-38.pyc
-models/__pycache__/LstmMVInput.cpython-38.pyc
-utils/__pycache__/utils.cpython-38.pyc
-/.idea/
 /isp1_results/
 export.csv
 test.csv

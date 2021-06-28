@@ -1,21 +1,17 @@
+from data.get_SMP_data import get_SMP_data
 from math import nan
-import threading
+from models.XgB import XgbModel
 import numpy as np
 from sklearn import utils
 from models.LstmMVInput import LstmMVInput
 import pandas as pd
-
-from data.training_data import update_data
 from models.KnnModel import KnnModel
 from models.Linear import Linear
-from models.KnnModel import KnnModel
-from data.isp1_results import get_excel_data
+from models.Lstm_model import LSTM
 import flask
-import sqlalchemy
 from flask import render_template
-
-import utils.utils as utils
-from utils.utils import get_data, get_json_for_line_fig,get_json_for_fig_scatter
+from utils import utils
+from utils.utils import get_data, get_json_for_line_fig,get_json_for_fig_scatter,get_data_from_csv
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 app.config['Debug'] = True
@@ -23,13 +19,13 @@ app.config['Debug'] = True
 
 @app.route('/')
 def index():
-	df = get_data('training_data','*')
+	df = get_data_from_csv()
 	return render_template('charts.jinja',title = 'Original Data',df=df,get_json = get_json_for_line_fig,y='Date')
 
 @app.route('/Correlation')
 def corrolations():
 
-	df = get_data('training_data','*')
+	df = get_data_from_csv()
 	df = df.loc[:,df.columns!='Date'].dropna()
 	return render_template('charts.jinja',title = 'Correlation',df=df,y='SMP',get_json = get_json_for_fig_scatter,
 
@@ -37,26 +33,24 @@ def corrolations():
 
 @app.route('/Linear')
 def Linear_page():
-	df = get_data('training_data','*')
+	df = get_data_from_csv()
 
 	linear = Linear(data=df)
 	
 
 	prediction, train_score, validation_score = linear.run()
-	df['Prediction'] = nan
-	df[-len(prediction):]['Prediction'] = prediction
-	df = df.dropna()
 
 	return render_template('model.jinja', title = 'Linear Model Last 24hours Prediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
+							chart_json = get_json_for_line_fig(prediction,'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
 
 @app.route('/KnnR')
 def Knn():
-	df = get_data('training_data','*')
+	df = get_data_from_csv()
+
 	KnnR = KnnModel(data=df)
-	
+
 	prediction, train_score, validation_score = KnnR.run()
 	df['Prediction'] = nan
 	df[-len(prediction):]['Prediction'] = prediction
@@ -70,31 +64,27 @@ def Knn():
 
 @app.route('/XgB')
 def XgB():
-	df = get_data('training_data','*')
-	KnnR = KnnModel(data=df)
-	
-	df['Prediction'], train_score, validation_score = KnnR.run()
+	df = get_data_from_csv()
+	xgb = XgbModel(data=df)
+	prediction, train_score, validation_score = xgb.run()
 	
 	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
+							chart_json = get_json_for_line_fig(prediction,'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score)
 
 @app.route('/Lstm')
 def lstm():
-	df = get_data('training_data','*')
-	# df = training_data()
-	# df = training_data_with_power()
-	# df = (pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/power_generation.csv').set_index('Date'))
+	df = get_data_from_csv()
 
 	try:
-		y_validation_prediction = np.array(get_data('lstmPrediction','*')).flatten().tolist()
+		y_validation_prediction = np.array(get_data('lstmPredictiona','*')).flatten().tolist()
 		hist = get_data('lstm_hist','*')
 		lstm = get_data('lstm_metrics','*')
 	except :
-		lstm_model = LstmMVInput(utils.MAE,df)
+		lstm_model = LstmMVInput(utils.MAE,df,learning_rate=0.01)
 		y_validation_prediction,hist,lstm = lstm_model.run()
-		
+
 	df['Prediction'] = nan
 	df[-len(y_validation_prediction[:-24]):]['Prediction'] = y_validation_prediction[:-24]
 	df = df.dropna()
