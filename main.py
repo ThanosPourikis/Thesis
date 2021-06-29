@@ -1,3 +1,4 @@
+from data.units_data import get_unit_data
 from data.get_SMP_data import get_SMP_data
 from math import nan
 from models.XgB import XgbModel
@@ -8,6 +9,8 @@ import pandas as pd
 from models.KnnModel import KnnModel
 from models.Linear import Linear
 from models.Lstm_model import LSTM
+from data.ADMHE_files import get_excel_data
+import config
 import flask
 from flask import render_template
 from utils import utils
@@ -20,21 +23,22 @@ app.config['Debug'] = True
 @app.route('/')
 def index():
 	df = get_data_from_csv()
-	return render_template('charts.jinja',title = 'Original Data',df=df,get_json = get_json_for_line_fig,y='Date')
+	return render_template('charts.jinja',title = 'Original Data',df=df[-48:],get_json = get_json_for_line_fig,y='Date')
 
 @app.route('/Correlation')
 def corrolations():
 
 	df = get_data_from_csv()
+
 	df = df.loc[:,df.columns!='Date'].dropna()
-	return render_template('charts.jinja',title = 'Correlation',df=df,y='SMP',get_json = get_json_for_fig_scatter,
+	return render_template('charts.jinja',title = 'Correlation',df=df[-48:],y='SMP',get_json = get_json_for_fig_scatter,
 
 							)
 
 @app.route('/Linear')
 def Linear_page():
 	df = get_data_from_csv()
-
+	
 	linear = Linear(data=df)
 	
 
@@ -51,27 +55,29 @@ def Knn():
 
 	KnnR = KnnModel(data=df)
 
-	prediction, train_score, validation_score = KnnR.run()
+	prediction, train_score, validation_score, model = KnnR.run()
 	df['Prediction'] = nan
 	df[-len(prediction):]['Prediction'] = prediction
 	df = df.dropna()
-
 	return render_template('model.jinja', title = 'KnnR Model Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
 							train_score= train_score,
-							validation_score = validation_score)
+							validation_score = validation_score,
+							model = model)
 
 
 @app.route('/XgB')
 def XgB():
 	df = get_data_from_csv()
 	xgb = XgbModel(data=df)
-	prediction, train_score, validation_score = xgb.run()
+	prediction, train_score, validation_score,model = xgb.run()
+	del df['Man_Hydro']
 	
 	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(prediction,'Date',['SMP','Prediction']),
 							train_score= train_score,
-							validation_score = validation_score)
+							validation_score = validation_score,
+							model = model)
 
 @app.route('/Lstm')
 def lstm():
