@@ -13,6 +13,7 @@ import json
 
 import torch
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+import plotly.graph_objects as go
 
 MSE = 'MSE'
 MAE = 'MAE'
@@ -63,10 +64,18 @@ def get_data(table, columns):
 		return pd.read_sql(f'SELECT {columns} FROM {table}', connection,index_col='index')
 	except :
 		return pd.read_sql(f'SELECT {columns} FROM {table}', connection)
+
 def get_json_for_line_fig(df,x,y):
 	fig = px.line(df,x=x,y=y)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	fig.update_layout(width=1500, height=500)
+	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
+
+def get_json_for_line_fig_pred(df,pred,x,y):
+	fig = go.figure()
+	fig.add_trace(go.Scatter(
+		x = df
+	))
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 def get_json_for_fig_scatter(df,x,y):
@@ -75,6 +84,9 @@ def get_json_for_fig_scatter(df,x,y):
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
+def get_data_from_csv():
+	pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/units.csv').set_index('Date')).to_csv('datasets/data.csv')
+	return pd.read_csv('datasets/data.csv').dropna()
 
 
 # def plot_lstm(data,lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val):

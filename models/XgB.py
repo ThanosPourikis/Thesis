@@ -22,7 +22,7 @@ class XgbModel:
 	def run(self):
 		self.features = (self.features).loc[:,self.features.columns!='Date'].dropna()
 		xgboost.set_config(verbosity = 2)
-		model = xgboost.XGBRegressor(learning_rate = 0.1)
+		model = xgboost.XGBRegressor(learning_rate = 0.3,colsample_bytree = 0.8)
 		# cs = GridSearchCV(model, self.parameters)
 		x_train, x_validate, y_train, y_validate = train_test_split(self.features, self.labels,shuffle=True,random_state=96,
 																	test_size=self.validation_size)
@@ -37,5 +37,5 @@ class XgbModel:
 		x_validate['Prediction'] = model.predict(x_validate)
 		x_validate = x_validate.join(self.date)
 		x_validate = x_validate.sort_index()
-		return x_validate,train_error,validate_error
+		return x_validate,train_error,validate_error,model
 
