@@ -14,7 +14,9 @@ import config
 import flask
 from flask import render_template
 from utils import utils
-from utils.utils import get_data, get_json_for_line_fig,get_json_for_fig_scatter,get_data_from_csv
+from utils.utils import get_data, get_json_for_line_fig,get_json_for_fig_scatter
+from data.training_data import get_data_from_csv
+from sklearn.metrics import mean_absolute_error
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 app.config['Debug'] = True
@@ -23,6 +25,7 @@ app.config['Debug'] = True
 @app.route('/')
 def index():
 	df = get_data_from_csv()
+	mean_absolute_error()
 	return render_template('charts.jinja',title = 'Original Data',df=df[-48:],get_json = get_json_for_line_fig,y='Date')
 
 @app.route('/Correlation')
@@ -55,28 +58,33 @@ def Knn():
 
 	KnnR = KnnModel(data=df)
 
-	prediction, train_score, validation_score, model = KnnR.run()
+	prediction, train_score, validation_score, test_score, model = KnnR.run()
 	df['Prediction'] = nan
 	df[-len(prediction):]['Prediction'] = prediction
-	df = df.dropna()
+	# df = df.dropna()
+
 	return render_template('model.jinja', title = 'KnnR Model Last 24hours Prediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
+							chart_json = get_json_for_line_fig(df[-48:],'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score,
+							test_score = test_score,
 							model = model)
 
 
 @app.route('/XgB')
 def XgB():
 	df = get_data_from_csv()
+	# df = df.loc[:,df.columns != 'Reserve_Up']
 	xgb = XgbModel(data=df)
-	prediction, train_score, validation_score,model = xgb.run()
-	del df['Man_Hydro']
-	
+	prediction,test, train_score, validation_score,test_score,model = xgb.run()
+	prediction = prediction.set_index('Date').join(df.set_index('Date')['SMP']).reset_index()
+
 	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
 							chart_json = get_json_for_line_fig(prediction,'Date',['SMP','Prediction']),
+							test_json = get_json_for_line_fig(test,'Date',['SMP','Prediction']),
 							train_score= train_score,
 							validation_score = validation_score,
+							test_score = test_score,
 							model = model)
 
 @app.route('/Lstm')
@@ -88,7 +96,7 @@ def lstm():
 		hist = get_data('lstm_hist','*')
 		lstm = get_data('lstm_metrics','*')
 	except :
-		lstm_model = LstmMVInput(utils.MAE,df,learning_rate=0.01)
+		lstm_model = LstmMVInput(utils.MAE,df,learning_rate=0.01,num_epochs=5000)
 		y_validation_prediction,hist,lstm = lstm_model.run()
 
 	df['Prediction'] = nan

@@ -84,9 +84,6 @@ def get_json_for_fig_scatter(df,x,y):
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
-def get_data_from_csv():
-	pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/units.csv').set_index('Date')).to_csv('datasets/data.csv')
-	return pd.read_csv('datasets/data.csv').dropna()
 
 
 # def plot_lstm(data,lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val):

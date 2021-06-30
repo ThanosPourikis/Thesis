@@ -7,8 +7,8 @@ from data.get_weather_data import download_weather_data
 import config
 
 
+get_unit_data(get_excel_data(folder_path=config.units['folder_path'],filetype=config.units['filetype']))
 download_weather_data()
 get_isp_data(get_excel_data(folder_path=config.isp1['folder_path'],filetype=config.isp1['filetype']))
 get_SMP_data()
-get_unit_data(get_excel_data(folder_path=config.units['folder_path'],filetype=config.units['filetype']))
 
