@@ -17,14 +17,21 @@ def get_SMP_data(new_files = True):
 		try:
 			df = pd.read_excel(folder_path + name,header=None)
 			line = (df[df.iloc[:,0] == 'Market Clearing Price']).index[0] +1
-			temp = pd.DataFrame(df.iloc[line][1:25])
+			temp = pd.DataFrame(df.iloc[line][1:-1]).dropna().reset_index(drop = True)
+			
+			if len(temp) == 23:#Daylight saving 02:00:00 is missing so i aproximate the values from the previous and next hours
+				print('Fuck')
+				temp = temp.append(pd.DataFrame(temp.iloc[1:3].mean(axis=0).to_dict(),index=[2.5])).sort_index().dropna().reset_index(drop = True)
+			elif len(temp) == 25:#Daylight saving 25hours mean 
+				temp.iloc[3] = temp.iloc[1:3].mean(axis=0)
+				temp = temp.drop([4]).sort_index().reset_index(drop = True)
+
 			temp['Date'] = df.iloc[1][0]
 			print(f'Proccessing {name}')
-			for i in range(1,len(temp['Date'])+1):
-				temp['Date'][i] += timedelta(hours = i-1)
+			for i in range(len(temp['Date'])):
+				temp['Date'][i] += timedelta(hours = i)
 			temp['Date'] = [localTz.localize(x) for x in temp['Date']]
-			if len(temp) != 24:
-				print('Fuck')
+			
 			export= export.append(temp,ignore_index=True)
 		except:
 			print('Not xlsx File')
