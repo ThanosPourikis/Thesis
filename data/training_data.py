@@ -1,4 +1,4 @@
-from data.isp1_results import get_excel_data
+from data.ADMHE_files import get_excel_data
 from data.get_SMP_data import get_SMP_data
 import datetime
 from os import path
@@ -78,4 +78,9 @@ def update_data(new_files = False):
 	export = power.join(gen).join(smp).dropna()
 	
 	save_df_to_db(export,'training_data')
+
+def get_data_from_csv():
+	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/units.csv').set_index('Date')).dropna().reset_index()
+	
+
 	

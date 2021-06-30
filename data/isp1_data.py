@@ -18,7 +18,7 @@ def get_isp_data(df):
 		date = datetime.fromisoformat(f'{i[0:4]}-{i[4:6]}-{i[6:8]}')
 		date = [date + timedelta(hours = i) for i in range(24)]
 		date = [localTz.localize(x) for x in date]
-		del date[3]
+		# del date[3]
 
 		res = df[i].iloc[df[i][df[i].iloc[:,0] == 'Non-Dispatchable RES'].index[0] + 1][2:-1]
 		temp['Renewables'] = res
@@ -48,8 +48,9 @@ def get_isp_data(df):
 			pairs.append(temp.iloc[j:j+2].mean(axis=0)) #Example (00:00:00 + 00:30:00)/2 -> 00:00:00
 		pairs = pd.DataFrame(pairs)
 		
-		if len(pairs) == 24:
-			pairs=pairs.drop([3]).reset_index(drop=True)
+		if len(pairs) != 24:
+			#Daylight saving 02:00:00 is missing so i aproximate the values from the previous and next hours
+			pairs = pairs.append(pd.DataFrame(pairs.iloc[1:3].mean(axis=0).to_dict(),index=[1.5])).sort_index().reset_index(drop = True)
 		
 		pairs["Date"] = date
 

@@ -6,7 +6,7 @@ from zipfile import ZipFile
 export = []
 folder_path = 'smp_files/'
 
-def get_SMP_files(page = 0):
+def get_SMP_files():
 	if os.path.exists(folder_path):
 		print('Directory already exists')
 	else:
@@ -25,9 +25,9 @@ def get_SMP_files(page = 0):
 
 	os.remove(zip_path)
 
-
-	for i in range(page,53):
-		url=f'https://www.enexgroup.gr/el/web/guest/markets-publications-el-day-ahead-market?p_p_id=com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_delta=7&p_r_p_resetCur=false&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_cur={i}'
+	index = 1
+	while(True):
+		url=f'https://www.enexgroup.gr/el/web/guest/markets-publications-el-day-ahead-market?p_p_id=com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_delta=7&p_r_p_resetCur=false&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_cur={index}'
 
 		data = requests.get(url)
 		print(data)
@@ -40,6 +40,9 @@ def get_SMP_files(page = 0):
 			print(f'Downloading File ')
 			with open(folder_path + i ,'wb') as xlsx:
 				xlsx.write(x)
+		if not names:
+			break
+		index += 1
 
 
 # https://www.enexgroup.gr/el/c/document_library/get_file?uuid=08c1813a-100c-42cb-0124-d1f6a7eb3325&groupId=20126

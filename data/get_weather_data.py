@@ -12,7 +12,7 @@ def download_weather_data():
 	to_keep = {'time' : 0,'temperature' : 0,'windSpeed' : 0,'windGust' : 0,'cloudCover' : 0,'uvIndex' : 0,'visibility' : 0,'city' : ''}
 	feature_list = ['time','temperature','windSpeed','windGust','cloudCover','uvIndex','visibility']
 
-	end = datetime.date(datetime.now() + timedelta(days=1))
+	end = datetime.date(datetime.now() + timedelta(days=2))
 	localTz = timezone('CET')
 	df = pd.DataFrame(columns=to_keep)
 	time = int(datetime.fromisoformat('2020-11-01 00:00:00').timestamp())
