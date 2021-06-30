@@ -20,7 +20,6 @@ def get_SMP_data(new_files = True):
 			temp = pd.DataFrame(df.iloc[line][1:-1]).dropna().reset_index(drop = True)
 			
 			if len(temp) == 23:#Daylight saving 02:00:00 is missing so i aproximate the values from the previous and next hours
-				print('Fuck')
 				temp = temp.append(pd.DataFrame(temp.iloc[1:3].mean(axis=0).to_dict(),index=[2.5])).sort_index().dropna().reset_index(drop = True)
 			elif len(temp) == 25:#Daylight saving 25hours mean 
 				temp.iloc[3] = temp.iloc[1:3].mean(axis=0)
