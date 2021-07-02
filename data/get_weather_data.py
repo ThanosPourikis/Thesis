@@ -45,9 +45,12 @@ def download_weather_data():
 	
 
 def get_weather_data():
-	export = pd.DataFrame(columns=['temperature','windSpeed','windGust','cloudCover','uvIndex','visibility'],index=['time'])
+	export = pd.DataFrame(pd.read_csv(f'datasets/weather_data_Athens.csv')['time']).rename(columns={'time' : "Date"}).set_index('Date')
 
 	for city in Cities:
-		df = pd.read_csv(f'datasets/weather_data_{city}.csv',index_col=0)
+		df = pd.read_csv(f'datasets/weather_data_{city}.csv')
+		df = df.rename(columns={'time' : "Date",'temperature' : f'temperature_{city}','windSpeed' : f'windSpeed_{city}','windGust' : f'windGust_{city}','cloudCover' : f'cloudCover_{city}','uvIndex' : f'uvIndex_{city}','visibility' : f'visibility_{city}'})
+
 		df = df.loc[:,df.columns!='city']
-		return df
+		export = export.join(df.set_index('Date'))
+	return export

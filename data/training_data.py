@@ -2,7 +2,7 @@ from data.ADMHE_files import get_excel_data
 from data.get_SMP_data import get_SMP_data
 import datetime
 from os import path
-
+import config
 import pandas as pd
 
 from utils.utils import save_df_to_db
@@ -80,7 +80,10 @@ def update_data(new_files = False):
 	save_df_to_db(export,'training_data')
 
 def get_data_from_csv():
-	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/units.csv').set_index('Date')).dropna().reset_index()
+	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/units.csv').set_index('Date')).join(pd.read_csv('datasets/SMP.csv').set_index('Date')).reset_index()
 	
-
-	
+def get_data_from_csv_with_Weather():
+	temp = pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).join(pd.read_csv('datasets/units.csv').set_index('Date'))
+	for city in config.Cities:
+		temp = temp.join(pd.read_csv(f'datasets/weather_data_{city}.csv').set_index('Date'))
+	return temp.reset_index()
