@@ -4,7 +4,6 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
-from data.sliding_windows import split_data
 
 
 class KnnModel:
@@ -13,7 +12,6 @@ class KnnModel:
 		self.labels = (data.loc[:,data.columns=='SMP']).reset_index(drop=True)
 		self.date = data.loc[:,data.columns=='Date']
 		self.validation_size = validation_size
-		self.date = data.loc[:,data.columns=='Date']
 		self.data = data
 		self.n_neighbors_parameters = {'n_neighbors': range(1, n_neighbors_parameters)}
 

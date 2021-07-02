@@ -1,9 +1,8 @@
 
-from data.sliding_windows import split_data
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import train_test_split
 from utils.utils import mean_absolute_error
 
 
