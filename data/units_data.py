@@ -23,7 +23,9 @@ def get_unit_data(df):
 		export = export.append(temp,ignore_index=True)
 	# export = export.dropna(axis=1)
 	export = export.fillna(0)
-	export.set_index('Date').sort_index().to_csv('datasets/units.csv')
+	export= export.set_index('Date').sort_index()
+	export.to_csv('datasets/units.csv')
+	return export.reset_index()
 
 		
 		

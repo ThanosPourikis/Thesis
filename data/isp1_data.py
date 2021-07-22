@@ -1,5 +1,6 @@
 
 from datetime import datetime,timedelta
+from os import path
 
 import pandas as pd
 
@@ -48,18 +49,22 @@ def get_isp_data(df):
 			pairs.append(temp.iloc[j:j+2].mean(axis=0)) #Example (00:00:00 + 00:30:00)/2 -> 00:00:00
 		pairs = pd.DataFrame(pairs)
 		
-		if len(pairs) == 23:
-			#Daylight saving 02:00:00 is missing so i aproximate the values from the previous and next hours
-			pairs = pairs.append(pd.DataFrame(pairs.iloc[1:3].mean(axis=0).to_dict(),index=[1.5])).sort_index().reset_index(drop = True)
-		elif len(pairs) == 25:
-			#Daylight saving 25hours mean 
-			pairs.iloc[3] = pairs.iloc[1:3].mean(axis=0)
-			pairs = pairs.drop([4]).sort_index().reset_index(drop = True)
-		pairs["Date"] = date
+		# if len(pairs) == 23:
+		# 	#Daylight saving 02:00:00 is missing so i aproximate the values from the previous and next hours
+		# 	pairs = pairs.append(pd.DataFrame(pairs.iloc[1:3].mean(axis=0).to_dict(),index=[1.5])).sort_index().reset_index(drop = True)
+		# 	pairs["Date"] = date
+		# 	del pairs
+		# elif len(pairs) == 25:
+		# 	#Daylight saving 25hours mean 
+		# 	pairs.iloc[3] = pairs.iloc[1:3].mean(axis=0)
+		# 	pairs = pairs.drop([4]).sort_index().reset_index(drop = True)
+		# 	pairs["Date"] = date
 
-		
-		
-		pairs = pairs.set_index('Date')
-		export_df = export_df.append(pairs)
-	export_df.sort_index().to_csv('datasets/requirements.csv')
+		if len(pairs) == 24:
+			pairs["Date"] = date
+			pairs = pairs.set_index('Date')
+			export_df = export_df.append(pairs)
 
+	export_df = export_df.sort_index()
+	export_df.to_csv('datasets/requirements.csv')
+	return export_df.reset_index()
