@@ -21,7 +21,7 @@ class XgbModel:
 		"random_state": [96],
 		}
 
-	def run(self):
+	def train(self):
 
 		self.labels = self.labels.reset_index(drop = True).dropna()
 		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
@@ -47,5 +47,6 @@ class XgbModel:
 		x_validate = x_validate.sort_index()
 		x_test = self.features[-24:].join(self.labels[-24:]).join(self.date)
 		x_test['Prediction'] = model.predict(self.features[-24:])
+		
 		return x_validate,x_test,train_error,validate_error,test_error,model
 

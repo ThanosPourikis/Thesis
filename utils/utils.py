@@ -1,19 +1,22 @@
+import datetime
 import math
 # from matplotlib import pyplot as plt
 import numpy as np
 
 import pandas as pd
-import sqlalchemy
 
 
 import plotly
 import plotly.express as px
+import plotly.graph_objects as go
+
 import json
 
 
 import torch
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-import plotly.graph_objects as go
+
+from data.get_weather_data import get_weather_data
 
 MSE = 'MSE'
 MAE = 'MAE'
@@ -47,66 +50,41 @@ def loss_function_selection(function):
 	elif HuberLoss == function:
 		return torch.nn.SmoothL1Loss(reduction='mean')
 
-
-def get_conn():
-	engine = sqlalchemy.create_engine('sqlite:///database.db')
-	return engine.connect()
-
-
-def save_df_to_db(dataframe, df_name):
-	connection = get_conn()
-	dataframe.to_sql(df_name, connection, if_exists='replace')
-
-
-def get_data(table, columns):
-	connection = get_conn()
-	try:
-		return pd.read_sql(f'SELECT {columns} FROM {table}', connection,index_col='index')
-	except :
-		return pd.read_sql(f'SELECT {columns} FROM {table}', connection)
-
 def get_json_for_line_fig(df,x,y):
 	fig = px.line(df,x=x,y=y)
 	fig = fig.update_xaxes(rangeslider_visible=True)
-	fig.update_layout(width=1500, height=500)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
-def get_json_for_line_fig_pred(df,pred,x,y):
-	fig = go.figure()
+def get_json_for_line_fig_pred(df,x,y):
+	fig = go.Figure()
 	fig.add_trace(go.Scatter(
-		x = df
+		x = df[y],
+		y=df[x],
+		mode = 'lines+markers'
 	))
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 def get_json_for_fig_scatter(df,x,y):
 	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')
-	fig.update_layout(width=1500, height=500)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
+def get_req():
+	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).reset_index()
 
+def get_data_from_csv():
+	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/units.csv').set_index('Date')).join(pd.read_csv('datasets/SMP.csv').set_index('Date')).reset_index()
+	
+def get_data_from_csv_with_weather():
+	return (get_data_from_csv().set_index('Date').join(get_weather_data().set_index('Date'))).reset_index()
 
-# def plot_lstm(data,lookback,y_train_prediction,y_validation_prediction,hist_train,hist_val):
-# 	train_predict_plot = np.empty_like(data.iloc[:, -1])
-# 	train_predict_plot[:] = np.nan
-# 	train_predict_plot[lookback:len(y_train_prediction.flatten()) + lookback] = y_train_prediction.flatten()
+def date_con(date): return datetime.datetime.fromisoformat(date)
 
-# 	validation_predict_plot = np.empty_like(data.iloc[:, -1])
-# 	validation_predict_plot[:] = np.nan
-# 	validation_predict_plot[len(y_train_prediction.flatten()) + lookback : (int(len(data)/24)*24) ] = y_validation_prediction.flatten()
-
-# 	fig, axs = plt.subplots(2)
-
-# 	axs[0].plot(train_predict_plot, color='r', label='Train Prediction')
-
-# 	axs[0].plot(validation_predict_plot, color='b', label='Validation Prediction')
-# 	axs[0].plot(data.iloc[:, -1], color='y', label='Actual Price')
-# 	axs[0].set_title('Model')
-# 	axs[0].set_xlim(len(y_train_prediction.flatten()) - 25, len(y_train_prediction.flatten()) + 50)
-# 	# axs[0].set_xlim(len(data)-50, len(data)+100)
-# 	axs[0].legend()
-# 	axs[1].plot(hist_train, label='Training Loss')
-# 	axs[1].plot(hist_val, label='Validation Loss')
-# 	axs[1].set_title('Loss')
-# 	axs[1].legend()
-# 	plt.show()
+def check_data_integrity(df):
+	print(len(df)/24)
+	df.to_csv('check_set')
+	df = df['Date']
+	delt = datetime.timedelta(hours= 1)
+	for i in range(len(df)-1):
+		if date_con(df[i]) + delt != date_con(df[i+1]):
+			print (f'Error at {df[i]}')

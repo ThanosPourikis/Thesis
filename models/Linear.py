@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
-from utils.utils import mean_absolute_error
 
 
 class Linear:
@@ -16,7 +15,7 @@ class Linear:
 		self.date = data.loc[:,data.columns=='Date']
 		self.data = data
 
-	def run(self):
+	def train(self):
 		
 		self.labels = self.labels.reset_index(drop = True).dropna()
 		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
