@@ -1,25 +1,28 @@
+
 import torch
-from torch import nn
+from torch.nn.modules.dropout import Dropout
 
 
 
-class LSTM(nn.Module):
-	def __init__(self, input_size, hidden_size, num_layers, output_dim,bidirectional = False,dropout=0.1):
+class LSTM(torch.nn.Module):
+	def __init__(self, input_size, hidden_size, num_layers, output_dim,drop=0.1,batch_first=True):
 		super(LSTM, self).__init__()
 		self.hidden_size = hidden_size
 		self.num_layers = num_layers
-		self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True,bidirectional = bidirectional,dropout = dropout)
-		if bidirectional:
-			hidden_size *=2
-			self.num_layers *=2
-		self.linear = nn.Linear(hidden_size, output_dim)
+		self.lstm = torch.nn.LSTM(input_size, hidden_size, num_layers, batch_first)
+		self.linear = torch.nn.Linear(hidden_size,hidden_size)
+		self.act = torch.nn.Tanh()
+		self.linear2 = torch.nn.Linear(hidden_size,output_dim)
+		self.act2 = torch.nn.Tanh()
 
 	def forward(self, x):
-		h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
-		c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
 
-		out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
+		output,_ = self.lstm(x)
+		output = self.linear(output)
+		output = self.act(output)
+		output = self.linear2(output)
+		output = self.act2(output)
 
-		out = self.linear(out[:, -1, :])
+		return output
 
-		return out
+	# maybe add one more layer a
