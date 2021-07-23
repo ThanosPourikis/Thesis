@@ -2,104 +2,99 @@ import flask
 from flask import render_template
 
 from utils.database_interface import DB
-from utils.utils import get_json_for_line_fig,get_json_for_fig_scatter, get_json_for_line_fig_pred
+from utils.utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics
+from datetime import date
+import pandas as pd
 
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
-
+today = pd.to_datetime(date.today())
 @app.route('/')
 def index():
 	db = DB()
-	df = db.get_data('dataset','*')
-	return render_template('charts.jinja',title = 'Original Data',df=df[-(7*24):],get_json = get_json_for_line_fig,x='Date')
+	df = db.get_data('*', 'dataset')
+	return render_template('charts.jinja',title = 'Train Data For The Past 7 Days',df=df[-(7*24):],get_json = get_json_for_line_fig,x='Date')
 
 @app.route('/Correlation')
 def corrolations():
-
 	db = DB()
-	df = db.get_data('dataset','*')
+	df = db.get_data('*', 'dataset')
 	df = df.iloc[:,df.columns!='Date'].dropna()
 	return render_template('charts.jinja',title = 'Correlation',df=df[-(7*24):],get_json = get_json_for_fig_scatter,x='SMP')
 
 @app.route('/Linear')
 def Linear_page():
-	df = 	db = DB()
-	df = db.get_data('linear','*')
-	metrics = db.get_data('metrics','linear')
+	db = DB()
+	df = db.get_data('*','linear')
+
+	if (df.columns == 'Inference').any():
+		y=['Prediction','SMP','Inference']
+	else:
+		y=['Prediction','SMP']
+
+	metrics = get_metrics('linear',db).loc[today]
+
+	return render_template('model.jinja', title = 'Linear Model Last 24hours Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_fig(df,'Date',y),
+							train_error= metrics['train_error'],
+							validate_error = metrics['validate_error'],
+							test_error = metrics['test_error']
+							)
+
+@app.route('/KnnR')
+def Knn():
+	db = DB()
+	df = db.get_data('*','Knn')
+
+	if (df.columns == 'Inference').any():
+		y=['Prediction','SMP','Inference']
+	else:
+		y=['Prediction','SMP']
+
+	metrics = get_metrics('Knn',db).loc[today]
+	return render_template('model.jinja', title = 'KnnR Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_fig(df,'Date',y),
+							train_error= metrics['train_error'],
+							validate_error = metrics['validate_error'],
+							test_error = metrics['test_error'])
 
 
-	return render_template('model.jinja', title = 'Linear Model Last 24hours Prediction vs Actual Price',
-							chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
-							train_score= train_score,
-							validation_score = validation_score)
+@app.route('/XgB')
+def XgB():
+	db = DB()
+	df = db.get_data('*','XgB')
 
-# @app.route('/KnnR')
-# def Knn():
-# 	df = get_data_from_csv()
+	if (df.columns == 'Inference').any():
+		y=['Prediction','SMP','Inference']
+	else:
+		y=['Prediction','SMP']
 
-# 	KnnR = KnnModel(data=df)
+	metrics = get_metrics('XgB',db).loc[today]
+	return render_template('model.jinja', title = 'XgB Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_fig(df,'Date',y),
+							train_error= metrics['train_error'],
+							validate_error = metrics['validate_error'],
+							test_error = metrics['test_error'])
 
-# 	prediction, train_score, validation_score, test_score, model = KnnR.train()
-# 	df['Prediction'] = nan
-# 	df[-len(prediction):]['Prediction'] = prediction
-# 	# df = df.dropna()
+@app.route('/Lstm')
+def lstm():
+	db = DB()
+	df = db.get_data('*','Lstm')
 
-# 	return render_template('model.jinja', title = 'KnnR Model Last 24hours Prediction vs Actual Price',
-# 							chart_json = get_json_for_line_fig(df[-48:],'Date',['SMP','Prediction']),
-# 							train_score= train_score,
-# 							validation_score = validation_score,
-# 							test_score = test_score,
-# 							model = model)
+	if (df.columns == 'Inference').any():
+		y=['Prediction','SMP','Inference']
+	else:
+		y=['Prediction','SMP']
 
+	hist = db.get_data('*','hist_lstm')
 
-# @app.route('/XgB')
-# def XgB():
-# 	df = get_data_from_csv()
-# 	xgb = XgbModel(data=df)
-# 	prediction,test, train_score, validation_score,test_score,model = xgb.train()
-# 	prediction = prediction.set_index('Date').join(df.set_index('Date')['SMP']).reset_index()
-
-# 	return render_template('model.jinja', title = 'XgBoost Regresion Last 24hours Prediction vs Actual Price',
-# 							chart_json = get_json_for_line_fig(prediction,'Date',['SMP','Prediction']),
-# 							test_json = get_json_for_line_fig(test,'Date',['SMP','Prediction']),
-# 							train_score= train_score,
-# 							validation_score = validation_score,
-# 							test_score = test_score,
-# 							model = model)
-
-# @app.route('/Lstm')
-# def lstm():
-# 	df = get_req()
-# 	# df = (pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date'))).reset_index()
-# 	# df = get_data_from_csv_with_weather()
-
-
-# 	lstm_model = LstmMVInput(utils.MAE,df) 
-# 	y_validation_prediction,hist,lstm = lstm_model.train()
-# 	# try:
-# 	# 	print('Retraing for best epoch')
-# 	# 	lstm_best_model = LstmMVInput(utils.MAE,df,learning_rate=0.01,num_epochs=hist['val'].argmin())
-# 	# 	y_validation_prediction,hist,lstm = lstm_best_model.train()
-# 	# except:
-# 	# 	pass
-
-
-# 	df['Prediction'] = nan
-# 	df[-len(y_validation_prediction):]['Prediction'] = y_validation_prediction
-# 	df = df.dropna()
-
-# 	# hist = pd.DataFrame({'hist_train': hist_train ,'hist_val':hist_val})
-
-
-
-# 	return render_template('lstm.jinja',title = 'Lstm Last 24hour Prediction vs Actual',
-# 												train_score = lstm.loc[0,'train'],
-# 												validation_score = lstm.loc[0,'val'],
-# 												train_time = lstm.loc[0,'time'],
-# 												chart_json = get_json_for_line_fig(df,'Date',['SMP','Prediction']),
-# 												hist_json = get_json_for_line_fig(hist,hist.index,['train','val'])
-# 												)
-
+	metrics = get_metrics('Lstm',db).loc[today]
+	return render_template('model.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_fig(df,'Date',y),
+							train_error= metrics['train_error'],
+							validate_error = metrics['validate_error'],
+							test_error = metrics['test_error']
+							,hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
 # @app.route('/test')
 # def test():
 # 	return ''

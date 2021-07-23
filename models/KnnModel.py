@@ -1,3 +1,4 @@
+import logging
 import time
 import pandas as pd
 
@@ -8,34 +9,41 @@ from sklearn.neighbors import KNeighborsRegressor
 
 class KnnModel:
 	def __init__(self, data, n_neighbors_parameters = 50, validation_size =0.2):
-		self.features = data.loc[:,data.columns!='SMP'].reset_index(drop=True)
-		self.labels = (data.loc[:,data.columns=='SMP']).reset_index(drop=True)
-		self.date = data.loc[:,data.columns=='Date']
+		data = data.set_index('Date')
+		if data.isnull().values.any():
+			self.inference = data[-24:]
+			self.test = data[-(8*24):-24]
+			data = data[:-(8*24)]
+		else:
+			self.test = data[-(7*24):]
+			data = data[:-(7*24)]
+		self.features = data.loc[:,data.columns!='SMP']
+		self.labels = (data.loc[:,data.columns=='SMP'])
 		self.validation_size = validation_size
-		self.data = data
 		self.n_neighbors_parameters = {'n_neighbors': range(1, n_neighbors_parameters)}
+		
 
 	def train(self):
-		self.labels = self.labels.reset_index(drop = True).dropna()
-		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
-
-		x_train, x_validate, y_train, y_validate = train_test_split(self.features[:-24], self.labels[:-24], random_state=96,
+		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features[:-24], self.labels[:-24], random_state=96,
 																	test_size=self.validation_size, shuffle=True)
 
-
-		
-		print("Training ... ")
+		logging.info("Training ... ")
 		start_time = time.time()
-		gs = GridSearchCV(KNeighborsRegressor(), self.n_neighbors_parameters)
-		gs.fit(x_train, y_train)
-		print(f'Time:{time.time() - start_time}')
-		print(gs.best_params_)
-		self.model = gs 
-		return gs.predict(self.features[-48:]), mean_absolute_error(y_train, gs.predict(x_train)), mean_absolute_error(y_validate, gs.predict(x_validate)),mean_absolute_error(self.labels[-24:], gs.predict(self.features[-24:])),gs.best_params_
-	
-	def predict(self,df):
-		if self.model == None:
-			print('Pleaze Train Model')
-		else:
-			return self.model.predict(df)
-	
+		self.gs = GridSearchCV(KNeighborsRegressor(), self.n_neighbors_parameters)
+		self.gs.fit(self.x_train, self.y_train)
+		logging.info(f'Time:{time.time() - start_time}')
+
+	def get_res(self):
+		train_error = mean_absolute_error(self.y_train,self.gs.predict(self.x_train))
+		validate_error = mean_absolute_error(self.y_validate,self.gs.predict(self.x_validate))
+		pred = self.gs.predict(self.test.loc[:,self.test.columns != 'SMP'])
+		test_error = mean_absolute_error(self.test.loc[:,'SMP'],pred)
+		self.test['Prediction'] = pred
+		try:
+			self.inference['Inference'] = self.gs.predict(self.inference.loc[:,self.inference.columns != 'SMP'])
+			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
+			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error,self.gs.best_params_
+
+		except:
+			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,self.gs.best_params_
+			

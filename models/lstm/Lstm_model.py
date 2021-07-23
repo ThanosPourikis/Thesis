@@ -3,7 +3,7 @@ import torch
 from torch.nn.modules.dropout import Dropout
 
 
-
+### TODO Add functionality for bidirectionality
 class LSTM(torch.nn.Module):
 	def __init__(self, input_size, hidden_size, num_layers, output_dim,drop=0.1,batch_first=True):
 		super(LSTM, self).__init__()

@@ -13,11 +13,11 @@
 		Plotly.plot('test_json', graph, {});
 	</script>
 
-	<h3>Train Score : {{train_score}}</h3>
+	<h3>Train error : {{train_error}}</h3>
 	<br>
-	<h3>Validation Score : {{validation_score}}</h3>
+	<h3>Validation error : {{validate_error}}</h3>
 	<br>
-	<h3>Test Score : {{test_score}}</h3>
+	<h3>Test error : {{test_error}}</h3>
 	{{ model }}
 	{% block more_data %}
 	{% endblock more_data %}

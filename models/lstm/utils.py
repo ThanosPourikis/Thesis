@@ -6,30 +6,18 @@ import torch
 
 # input shape = (batch_size, seq_len, features)
 
-def slinding_windows(data, lookForward, test_size=0.2):
-
-	features = data.loc[:,data.columns != 'SMP']
-	labels =  data.loc[:,data.columns == 'SMP']
+def sliding_windows(features,labels,sequence_len = 24,window_step = 1):
 	xX = []
 	yY = []
-	for i in range(len(data) - lookForward):
+	for i in range(0, len(features) - sequence_len+1, window_step):
 
-		xX.append(features[i: i + lookForward])
-		yY.append(labels[i: i + lookForward])
-
-	
+		xX.append(features[i: i + sequence_len])
+		yY.append(labels[i: i + sequence_len])
 
 	xX = np.array(xX)
 	yY = np.array(yY)
 
-	test_size = int(np.round(data.shape[0]*test_size))
-	train_size = data.shape[0] - test_size
-	x_train = xX[:train_size]
-	y_train = yY[:train_size]
-
-	x_validation = xX[train_size:]
-	y_validation = yY[train_size:]
-	return x_train, y_train, x_validation, y_validation
+	return xX,yY
 
 
 def split_data(data, lookForward, validation_size=0.2):
@@ -71,7 +59,7 @@ class TestSample(torch.utils.data.Dataset):
 
 def get_tensors(data, lookforward,x_scaler,y_scaler):
 	# x_train, y_train, x_validation, y_validation = split_data(data, lookforward)
-	x_train, y_train, x_validation, y_validation = slinding_windows(data, lookforward)
+	x_train, y_train, x_validation, y_validation = sliding_windows(data, lookforward)
 
 	x_train = x_scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
 	x_validation = x_scaler.transform(x_validation.reshape(-1, x_validation.shape[-1])).reshape(x_validation.shape)

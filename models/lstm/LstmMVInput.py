@@ -1,4 +1,5 @@
 
+import logging
 import time
 from os import path
 
@@ -10,24 +11,39 @@ import copy
 
 from models.lstm.Lstm_model import LSTM
 from torch.utils.data import DataLoader
-from models.lstm.utils import RequirementsSample, slinding_windows, split_data
+from models.lstm.utils import RequirementsSample, sliding_windows
 from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from utils.database_interface import DB
 
-
+### TODO Add Hybrid Code
 
 class LstmMVInput:
 	def __init__(self, loss_function, data,
 				 learning_rate=0.001,
+				 validation_size= 0.2,
 				 sequence_length=24,
-				 batch_size = 24,
+				 batch_size = 32,
 				 hidden_size=128,
 				 num_layers=1,
 				 output_dim=1,
 				 num_epochs=150,
-				 model = None):
+				 model = None,):
+		data = data.set_index('Date')
+		if data.isnull().values.any():
+			self.inference = data[-24:]
+			self.test = data[-(8*24):-24]
+			data = data[:-(8*24)]
+		else:
+			self.test = data[-(7*24):]
+			data = data[:-(7*24)]
 
+
+		self.features = data.loc[:,data.columns!='SMP']
+		self.labels = data.loc[:,data.columns=='SMP']
+		self.input_size = len(self.features.columns)
+		self.validation_size = validation_size
 		self.loss_function = loss_function
-		self.data = data
 		self.sequence_length = sequence_length
 		self.batch_size = batch_size
 		self.hidden_size = hidden_size
@@ -36,89 +52,131 @@ class LstmMVInput:
 		self.num_epochs = num_epochs
 		self.learning_rate = learning_rate
 		self.model = model
+		self.db = DB()
 
 
 	def train(self):
-		self.data = (self.data).loc[:,self.data.columns!='Date']
-
-		self.data = self.data.reset_index(drop=True).dropna()
-		self.input_size = len(self.data.columns) - 1
+		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels, 
+		random_state=96,test_size=self.validation_size)
 		
+		x_train,y_train = sliding_windows(self.x_train,self.y_train)
+		x_validate,y_validate = sliding_windows(self.x_validate,self.y_validate)
+		scalers = {
+			'feature_t' : MinMaxScaler(feature_range=(-1, 1)),
+			'feature_v' : MinMaxScaler(feature_range=(-1, 1)),
+			'labels_t' : MinMaxScaler(feature_range=(-1, 1)),
+			'labels_v' : MinMaxScaler(feature_range=(-1, 1))
+		}
+		x_train = scalers['feature_t'].fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
+		x_validate = scalers['feature_v'].fit_transform(x_validate.reshape(-1, x_validate.shape[-1])).reshape(x_validate.shape)
 
-		feature_scaler = MinMaxScaler(feature_range=(-1, 1))
-		labels_scaler = MinMaxScaler(feature_range=(-1, 1))
-
-		# dd = data.DataLoader(RequirementsLoader(self.data),24)
- 
-		print('No preTrained Model Found ..... \nTraining .....')
+		y_train = scalers['labels_t'].fit_transform(y_train.squeeze())
+		y_validate = scalers['labels_v'].fit_transform(y_validate.squeeze())
 
 		model = LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
-						num_layers=self.num_layers)
-		# choose loss function
-		criterion = torch.nn.L1Loss()
+						num_layers=self.num_layers,batch_first=True)
+
+		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False)
+		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False)
+
+		self.criterion = torch.nn.L1Loss()
 		optimiser = torch.optim.Adam(model.parameters(), self.learning_rate)
 
-
-		error_train = np.zeros([self.num_epochs])
-		error_val = np.zeros([self.num_epochs])
-		
-		x_train, y_train, x_validation, y_validation = slinding_windows(self.data[:-24],self.sequence_length)
-		# x_train, y_train, x_validation, y_validation = split_data(self.data,self.sequence_length)
-
-		x_train = feature_scaler.fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
-		x_validation = feature_scaler.transform(x_validation.reshape(-1, x_validation.shape[-1])).reshape(x_validation.shape)
-
-		y_train = labels_scaler.fit_transform(y_train.squeeze())
-		y_validation = labels_scaler.transform(y_validation.squeeze())
-
-		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size,drop_last=True)
-		val_data_loader = DataLoader(RequirementsSample(x_validation,y_validation),self.batch_size,drop_last=True)
-		
+		self.error_train = np.zeros([self.num_epochs])
+		self.error_val = np.zeros([self.num_epochs])
 		y_train_pred_arr = list()
 		y_val_pred_arr = list()
 		models_dict = dict()
-		
+		start_time = time.time()
+
+
 		for i in range(self.num_epochs):
 			err = []
-
 			for j, k in train_data_loader:
 				model.train()
 				temp = list()
 				y_train_pred = model(j.float())
 				temp.append(y_train_pred.detach().numpy().squeeze())
-				loss = criterion(y_train_pred.squeeze(), k.squeeze().float())
+				loss = self.criterion(y_train_pred.squeeze(), k.squeeze().float())
 				err.append(loss.detach().item())
 				optimiser.zero_grad()
 				loss.backward()
 				optimiser.step()
 			y_train_pred_arr.append(temp)
-			error_train[i] = sum(err) / len(err)
+			self.error_train[i] = sum(err) / len(err)
 
-			err = []
 			with torch.set_grad_enabled(False):
+				model.eval()
+				err = []
 				for j, k in val_data_loader:
 						temp = list()
-						model.eval()
 						y_val_pred = model(j.float())
 						temp.append(y_val_pred.detach().numpy().squeeze())
-						loss = criterion(y_val_pred.squeeze(),k.squeeze())
+						loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
 						err.append(loss.detach().item())
 				y_val_pred_arr.append(temp)
-			error_val[i] = sum(err)/len(err)
+			self.error_val[i] = sum(err)/len(err)
 			models_dict[i] = copy.deepcopy(model)
-			print(f"Epoch\t Training\t {i} {self.loss_function}  {error_train[i]}\t Validation\t {i} {self.loss_function}  {error_val[i]}")
+			logging.info(f"Epoch\t Training\t {i} {self.loss_function}  {self.error_train[i]}\t Validation\t {i} {self.loss_function}  {self.error_val[i]}")
 
-		# invert predictions
-		y_train_pred = labels_scaler.inverse_transform(y_train_pred.detach().numpy().squeeze())
-		y_train = labels_scaler.inverse_transform(y_train)
-		y_val_pred = labels_scaler.inverse_transform(y_val_pred.detach().numpy().squeeze())
-		y_validation = labels_scaler.inverse_transform(y_validation)
+		self.best_epoch = self.error_val.argmin()
+		logging.info(f'Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time}')
+		self.model = models_dict[self.best_epoch]
+		y_train_pred_best = y_train_pred_arr[self.best_epoch][0]
+		y_val_pred_best = y_val_pred_arr[self.best_epoch][0]
 
-		self.model = models_dict[error_val.argmin()]
+		self.y_train_prediction = scalers['labels_t'].inverse_transform(y_train_pred_best)
+		self.y_train_denorm = scalers['labels_t'].inverse_transform(y_train) 
+
+		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
+		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
+
+	def get_res(self):
 
 
+		train_error = mean_absolute_error(self.y_train_prediction, self.y_train_denorm[-len(self.y_train_prediction):])
+		validate_error = mean_absolute_error(self.y_val_pred_denorm, self.y_validate_denorm[-len(self.y_val_pred_denorm):])
+
+		logging.info(f'Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
-		hist['train'] = error_train
-		hist['val'] = error_val
-		return y_val_pred.squeeze(),hist,models_dict[hist['val'].argmin()]
+		hist['hist_train'] = self.error_train.tolist()
+		hist['hist_val'] = self.error_val.tolist()
+		
+		
+		x_test,y_test = sliding_windows(self.test.loc[:,self.test.columns != 'SMP'],self.test.loc[:,'SMP'],sequence_len=24,window_step=24)
+		
+		x_test_scaler = MinMaxScaler(feature_range=(-1, 1))
+		x_test = x_test_scaler.fit_transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
+		# x_test = torch.from_numpy(x_test).type(torch.Tensor)
+		
+		y_test_scaler = MinMaxScaler(feature_range=(-1, 1))
+		y_test_scaler.fit_transform(y_test)
+		# y_test = torch.from_numpy(y_test).type(torch.Tensor)
+		
+		with torch.set_grad_enabled(False):
+			self.model.eval()
+			err = []
+			test_data_loader = DataLoader(RequirementsSample(x_test,y_test),1, shuffle=False)
+			pred_arr = []
+			temp = list()
+			for j, k in test_data_loader:
+					pred_arr = self.model(j.float())
+					temp.append(pred_arr.detach().numpy().squeeze())
+					loss = self.criterion(pred_arr.squeeze(),k.squeeze().float())
+					err.append(loss.detach().item())
+		test_pred = y_test_scaler.inverse_transform(temp)
+		test_error = mean_absolute_error(y_test,test_pred)
+		self.test['Prediction'] = test_pred.flatten()
+		try:
+			x_infe,_ = sliding_windows(self.inference.loc[:,self.inference.columns != 'SMP'],self.inference.loc[:,'SMP'],sequence_len=24,window_step=24)
+			infe_scaler = MinMaxScaler(feature_range=(-1, 1))
+			x_infe = infe_scaler.fit_transform(x_infe.squeeze()).reshape(x_infe.shape)
+			x_infe = torch.from_numpy(x_infe).type(torch.Tensor)
+			pred_arr = self.model(x_infe)
+			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
+			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
+			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error
+		except:
+			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,hist
+
 		
