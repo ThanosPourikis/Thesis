@@ -8,12 +8,9 @@ import pandas as pd
 
 import plotly
 import plotly.express as px
-import plotly.graph_objects as go
 
 import json
 
-
-import torch
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 from data.get_weather_data import get_weather_data
@@ -41,28 +38,11 @@ def error_calculation(function, y_train, y_train_prediction, y_validation, y_val
 		print('Validation Score: %.2f RMSE' % test_score)
 	return train_score, test_score
 
-
-def loss_function_selection(function):
-	if MAE == function:
-		return torch.nn.L1Loss()
-	elif MSE == function:
-		return torch.nn.MSELoss(reduction='mean')
-	elif HuberLoss == function:
-		return torch.nn.SmoothL1Loss(reduction='mean')
-
 def get_json_for_line_fig(df,x,y):
 	fig = px.line(df,x=x,y=y)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
-def get_json_for_line_fig_pred(df,x,y):
-	fig = go.Figure()
-	fig.add_trace(go.Scatter(
-		x = df[y],
-		y=df[x],
-		mode = 'lines+markers'
-	))
-	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 def get_json_for_fig_scatter(df,x,y):
 	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')

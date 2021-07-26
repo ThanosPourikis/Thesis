@@ -12,72 +12,69 @@ from utils.update_data import update
 
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
 
-class Server:
-	def __init__(self):
-		self.db =DB()
-		self.df = self.db.get_data('*','train_set')
-		self.today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
-	def linear(self):
-		linear = Linear(data=self.df)
-		linear.train()
-		prediction,train_error,validate_error,test_error = linear.get_res()
-		self.db.save_df_to_db(prediction,'linear')
+def linear(df,db):
+	linear = Linear(data=df)
+	linear.train()
+	prediction,train_error,validate_error,test_error = linear.get_res()
+	db.save_df_to_db(prediction,'linear')
 
-		metrics = pd.DataFrame({
-			'train_error':train_error,
-			'validate_error':validate_error,
-			'test_error':test_error},index=[self.today])
-		utils.save_metrics(metrics,'linear',self.db)
-		metrics = utils.get_metrics('linear',self.db)
+	metrics = pd.DataFrame({
+		'train_error':train_error,
+		'validate_error':validate_error,
+		'test_error':test_error},index=[today])
+	utils.save_metrics(metrics,'linear',db)
+	metrics = utils.get_metrics('linear',db)
 
 
 
-	def Knn(self):
-		knn = KnnModel(data=self.df)
-		knn.train()
-		prediction,train_error,validate_error,test_error,best_params_ = knn.get_res()
-		self.db.save_df_to_db(prediction,'knn')
+def Knn(df,db):
+	knn = KnnModel(data=df)
+	knn.train()
+	prediction,train_error,validate_error,test_error,best_params_ = knn.get_res()
+	db.save_df_to_db(prediction,'knn')
 
-		metrics = pd.DataFrame({
-			'train_error':train_error,
-			'validate_error':validate_error,
-			'test_error':test_error,
-			'best_params_':best_params_['n_neighbors']},index=[self.today])
-		utils.save_metrics(metrics,'knn',self.db)
+	metrics = pd.DataFrame({
+		'train_error':train_error,
+		'validate_error':validate_error,
+		'test_error':test_error,
+		'best_params_':best_params_['n_neighbors']},index=[today])
+	utils.save_metrics(metrics,'knn',db)
 
-	def xgb(self):
-		xgb = XgbModel(data=self.df)
-		xgb.train()
-		prediction,train_error,validate_error,test_error = xgb.get_res()
-		self.db.save_df_to_db(prediction,'xgb')
+def xgb(df,db):
+	xgb = XgbModel(data=df)
+	xgb.train()
+	prediction,train_error,validate_error,test_error = xgb.get_res()
+	db.save_df_to_db(prediction,'xgb')
 
-		metrics = pd.DataFrame({
-			'train_error':train_error,
-			'validate_error':validate_error,
-			'test_error':test_error},index=[self.today])
-		utils.save_metrics(metrics,'xgb',self.db)
+	metrics = pd.DataFrame({
+		'train_error':train_error,
+		'validate_error':validate_error,
+		'test_error':test_error},index=[today])
+	utils.save_metrics(metrics,'xgb',db)
 
-	def lstm(self):
-		lstm = LstmMVInput(utils.MAE,self.df,num_epochs=150,batch_size=32,sequence_length=24)
-		lstm.train()
-		prediction,train_error,validate_error,test_error,hist = lstm.get_res()
-		self.db.save_df_to_db(hist,'hist_lstm')
+def lstm(df,db):
+	lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24)
+	lstm.train()
+	prediction,train_error,validate_error,test_error,hist = lstm.get_res()
+	db.save_df_to_db(hist,'hist_lstm')
 
-		self.db.save_df_to_db(prediction,'lstm')
+	db.save_df_to_db(prediction,'lstm')
 
-		metrics = pd.DataFrame({
-			'train_error':train_error,
-			'validate_error':validate_error,
-			'test_error':test_error},index=[self.today])
-		utils.save_metrics(metrics,'lstm',self.db)
+	metrics = pd.DataFrame({
+		'train_error':train_error,
+		'validate_error':validate_error,
+		'test_error':test_error},index=[today])
+	utils.save_metrics(metrics,'lstm',db)
 
+db =DB()
+df = db.get_data('*','train_set')
+today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
 update()
-server = Server()
-server.linear()
-server.Knn()
-server.xgb()
-server.lstm()
+linear(df,db)
+Knn(df,db)
+xgb(df,db)
+lstm(df,db)
 
 # ## Debug ###
 # def debug(metrics,prediction):

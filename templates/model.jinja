@@ -6,18 +6,27 @@
 		var graph = {{ chart_json | safe }};
 		Plotly.plot('chart_json', graph, {});
 	</script>
-
-	<div id="test_json"></div>
-	<script>
-		var graph = {{ test_json | safe }};
-		Plotly.plot('test_json', graph, {});
-	</script>
-
-	<h3>Train error : {{train_error}}</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Train error</th>
+				<th>Validation error</th>
+				<th>Test error</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td scope="row">{{train_error}}</td>
+				<td>{{validate_error}}</td>
+				<td>{{test_error}}</td>
+			</tr>
+		</tbody>
+	</table>
+	<h3></h3>
 	<br>
-	<h3>Validation error : {{validate_error}}</h3>
+	<h3></h3>
 	<br>
-	<h3>Test error : {{test_error}}</h3>
+	<h3></h3>
 	{{ model }}
 	{% block more_data %}
 	{% endblock more_data %}

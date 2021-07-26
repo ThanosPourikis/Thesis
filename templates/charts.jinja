@@ -1,23 +1,24 @@
 {% extends 'base.jinja' %}
-
+fif
 {% block content %}
 	<h1>{{title}}</h1>
 	{% for i in df.columns %}
 		</div>
-		<div class="row">
+	<div class="row">
 		<div class="col-xs-1-12">
 			<div class="card">
-			<div class="card-body">
-				<h3 class="card-title">{{i}}</h3>
-				<div  id='{{i}}'>
-					<script>
-					var graph = {{ get_json(df,x,i) | safe }};
-					Plotly.plot('{{i}}', graph, {});
-					</script>
-			</div>
+				<div class="card-body">
+					<h3 class="card-title">{{i}}</h3>
+					<div  id='{{i}}'>
+						<script>
+							var graph = {{ get_json(df,x,i) | safe }};
+							Plotly.plot('{{i}}', graph, {});
+						</script>
+					</div>
+				</div>
 			</div>
 		</div>
-		</div>
+	</div>
 	{% endfor %}
 {% endblock content %}
 

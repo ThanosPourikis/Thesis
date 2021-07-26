@@ -175,7 +175,7 @@ class LstmMVInput:
 			pred_arr = self.model(x_infe)
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error
+			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error,hist
 		except:
 			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,hist
 

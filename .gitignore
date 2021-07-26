@@ -13,3 +13,4 @@ smp_files
 config.py
 test.json
 units/
+*\.log
