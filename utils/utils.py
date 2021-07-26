@@ -1,18 +1,8 @@
 import datetime
 import math
 # from matplotlib import pyplot as plt
-import numpy as np
-
 import pandas as pd
-
-
-import plotly
-import plotly.express as px
-
-import json
-
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-
 from data.get_weather_data import get_weather_data
 
 MSE = 'MSE'
@@ -37,17 +27,6 @@ def error_calculation(function, y_train, y_train_prediction, y_validation, y_val
 		test_score = math.sqrt(mean_squared_error(y_validation_prediction.flatten(), y_validation.flatten()))
 		print('Validation Score: %.2f RMSE' % test_score)
 	return train_score, test_score
-
-def get_json_for_line_fig(df,x,y):
-	fig = px.line(df,x=x,y=y)
-	fig = fig.update_xaxes(rangeslider_visible=True)
-	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
-
-
-def get_json_for_fig_scatter(df,x,y):
-	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')
-	fig = fig.update_xaxes(rangeslider_visible=True)
-	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 def get_req():
 	return pd.read_csv('datasets/requirements.csv').set_index('Date').join(pd.read_csv('datasets/SMP.csv').set_index('Date')).reset_index()
@@ -79,9 +58,3 @@ def save_metrics(metrics,model,db):
 		db.save_df_to_db(metrics,f'metrics_{model}')
 
 
-def get_metrics(model,db):
-	metrics = db.get_data('*',f'metrics_{model}')
-	metrics.index = pd.to_datetime(metrics.index)
-	return metrics
-
-	

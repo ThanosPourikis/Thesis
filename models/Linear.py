@@ -31,7 +31,7 @@ class Linear:
 
 		self.lr = LinearRegression().fit(self.x_train, self.y_train)
 		
-	def get_res(self):
+	def get_results(self):
 		train_error = mean_absolute_error(self.y_train, self.lr.predict(self.x_train))
 		validate_error = mean_absolute_error(self.y_validate, self.lr.predict(self.x_validate))
 

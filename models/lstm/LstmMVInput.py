@@ -131,7 +131,7 @@ class LstmMVInput:
 		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
 		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
 
-	def get_res(self):
+	def get_results(self):
 
 
 		train_error = mean_absolute_error(self.y_train_prediction, self.y_train_denorm[-len(self.y_train_prediction):])
@@ -175,7 +175,9 @@ class LstmMVInput:
 			pred_arr = self.model(x_infe)
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error,hist
+			export = self.test.iloc[:,-2:]
+			export['SMP'] = self.test.loc[:,'SMP']
+			return export.reset_index(),train_error,validate_error,test_error,hist
 		except:
 			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,hist
 

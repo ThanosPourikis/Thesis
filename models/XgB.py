@@ -35,7 +35,7 @@ class XgbModel:
 		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
 		self.model = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=100,max_depth= 8)
 		# cs = GridSearchCV(model, self.parameters)
-		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features[:-24], self.labels[:-24],shuffle=True,random_state=96,
+		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels,shuffle=True,random_state=96,
 																	test_size=self.validation_size)
 
 		logging.info('Fitting Model')
@@ -44,7 +44,7 @@ class XgbModel:
 	
 		# cs.fit(x_train,y_train)
 		# model=xgboost.XGBRegressor(**cs.best_params_)
-	def get_res(self):
+	def get_results(self):
 		train_error = mean_absolute_error(self.y_train, self.model.predict(self.x_train))
 		validate_error = mean_absolute_error(self.y_validate, self.model.predict(self.x_validate))
 

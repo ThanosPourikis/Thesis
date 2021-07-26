@@ -2,9 +2,10 @@ import flask
 from flask import render_template
 
 from utils.database_interface import DB
-from utils.utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics
+from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics
 from datetime import date
 import pandas as pd
+import json
 
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
@@ -12,15 +13,15 @@ today = pd.to_datetime(date.today())
 @app.route('/')
 def index():
 	db = DB()
-	df = db.get_data('*', 'dataset')
-	return render_template('charts.jinja',title = 'Train Data For The Past 7 Days',df=df[-(7*24):],get_json = get_json_for_line_fig,x='Date')
+	df = db.get_data('*', 'dataset')[-(7*24):].set_index('Date')
+	return render_template('charts.jinja',title = 'Train Data For The Past 7 Days',df=df,get_json = get_json_for_line_fig,x=df.index)
 
 @app.route('/Correlation')
 def corrolations():
 	db = DB()
-	df = db.get_data('*', 'dataset')
+	df = db.get_data('*', 'dataset')[-(7*24):].set_index('SMP')
 	df = df.iloc[:,df.columns!='Date'].dropna()
-	return render_template('charts.jinja',title = 'Correlation',df=df[-(7*24):],get_json = get_json_for_fig_scatter,x='SMP')
+	return render_template('charts.jinja',title = 'Correlation',df=df,get_json = get_json_for_fig_scatter,x=df.index)
 
 @app.route('/Linear')
 def Linear_page():
@@ -95,6 +96,38 @@ def lstm():
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'],
 							hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
+
+@app.route('/Hybrid_Lstm')
+def hybrid_lstm():
+	db = DB()
+	df = db.get_data('*','Hybrid_Lstm')
+
+	if (df.columns == 'Inference').any():
+		y=['Prediction','SMP','Inference']
+	else:
+		y=['Prediction','SMP']
+
+	hist = db.get_data('*','hist_Hybrid_Lstm')
+
+	metrics = get_metrics('Hybrid_Lstm',db).iloc[0]
+	return render_template('lstm.jinja', title = 'Hybrid Lstm Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_fig(df,'Date',y),
+							train_error= metrics['train_error'],
+							validate_error = metrics['validate_error'],
+							test_error = metrics['test_error'],
+							hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
+
+@app.route('/api')
+def api():
+	db = DB()
+	df = {}
+	df['Linear'] = db.get_data('*','linear').set_index('Date')['Inference'].dropna().to_json()
+	df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna().to_json()
+	df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna().to_json()
+	df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna().to_json()
+
+	return json.dumps(df)
+
 
 if __name__ == '__main__':
 	

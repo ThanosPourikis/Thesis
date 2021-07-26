@@ -9,6 +9,7 @@ from sklearn.neighbors import KNeighborsRegressor
 
 class KnnModel:
 	def __init__(self, data, n_neighbors_parameters = 50, validation_size =0.2):
+		self.data = data
 		data = data.set_index('Date')
 		if data.isnull().values.any():
 			self.inference = data[-24:]
@@ -24,7 +25,7 @@ class KnnModel:
 		
 
 	def train(self):
-		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features[:-24], self.labels[:-24], random_state=96,
+		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels, random_state=96,
 																	test_size=self.validation_size, shuffle=True)
 
 		logging.info("Training ... ")
@@ -33,7 +34,7 @@ class KnnModel:
 		self.gs.fit(self.x_train, self.y_train)
 		logging.info(f'Time:{time.time() - start_time}')
 
-	def get_res(self):
+	def get_results(self):
 		train_error = mean_absolute_error(self.y_train,self.gs.predict(self.x_train))
 		validate_error = mean_absolute_error(self.y_validate,self.gs.predict(self.x_validate))
 		pred = self.gs.predict(self.test.loc[:,self.test.columns != 'SMP'])
@@ -46,4 +47,3 @@ class KnnModel:
 
 		except:
 			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,self.gs.best_params_
-			
