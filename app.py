@@ -32,9 +32,9 @@ def Linear_page():
 	else:
 		y=['Prediction','SMP']
 
-	metrics = get_metrics('linear',db).loc[today]
+	metrics = get_metrics('linear',db).iloc[0]
 
-	return render_template('model.jinja', title = 'Linear Model Last 24hours Prediction vs Actual Price And Inference',
+	return render_template('model.jinja', title = 'Linear Model Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_fig(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
@@ -51,7 +51,7 @@ def Knn():
 	else:
 		y=['Prediction','SMP']
 
-	metrics = get_metrics('Knn',db).loc[today]
+	metrics = get_metrics('Knn',db).iloc[0]
 	return render_template('model.jinja', title = 'KnnR Model Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_fig(df,'Date',y),
 							train_error= metrics['train_error'],
@@ -69,7 +69,7 @@ def XgB():
 	else:
 		y=['Prediction','SMP']
 
-	metrics = get_metrics('XgB',db).loc[today]
+	metrics = get_metrics('XgB',db).iloc[0]
 	return render_template('model.jinja', title = 'XgB Model Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_fig(df,'Date',y),
 							train_error= metrics['train_error'],
@@ -88,16 +88,13 @@ def lstm():
 
 	hist = db.get_data('*','hist_lstm')
 
-	metrics = get_metrics('Lstm',db).loc[today]
-	return render_template('model.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
+	metrics = get_metrics('Lstm',db).iloc[0]
+	return render_template('lstm.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_fig(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
-							test_error = metrics['test_error']
-							,hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
-# @app.route('/test')
-# def test():
-# 	return ''
+							test_error = metrics['test_error'],
+							hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
 
 if __name__ == '__main__':
 	
