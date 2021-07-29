@@ -9,9 +9,8 @@ Linear Model
 KnnR Model
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/KnnR.png)
 Xgboost Model
-
-pending
-
+![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/XgBoost.png)
 Lstm Model
-
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/lstm.png)
+Hybrid Lstm Model
+![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/hybrid_lstm.png)
