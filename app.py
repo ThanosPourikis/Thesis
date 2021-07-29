@@ -2,11 +2,10 @@ import flask
 from flask import render_template
 
 from utils.database_interface import DB
-from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics
+from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter
 from datetime import date
 import pandas as pd
 import json
-
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 today = pd.to_datetime(date.today())
@@ -26,7 +25,7 @@ def corrolations():
 @app.route('/Linear')
 def Linear_page():
 	db = DB()
-	df = db.get_data('*','linear')
+	df = db.get_data('*','linear').set_index('Date')
 
 	if (df.columns == 'Inference').any():
 		y=['Prediction','SMP','Inference']
@@ -36,7 +35,7 @@ def Linear_page():
 	metrics = get_metrics('linear',db).iloc[0]
 
 	return render_template('model.jinja', title = 'Linear Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_fig(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error']
@@ -45,7 +44,7 @@ def Linear_page():
 @app.route('/KnnR')
 def Knn():
 	db = DB()
-	df = db.get_data('*','Knn')
+	df = db.get_data('*','Knn').set_index('Date')
 
 	if (df.columns == 'Inference').any():
 		y=['Prediction','SMP','Inference']
@@ -54,7 +53,7 @@ def Knn():
 
 	metrics = get_metrics('Knn',db).iloc[0]
 	return render_template('model.jinja', title = 'KnnR Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_fig(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'])
@@ -63,7 +62,7 @@ def Knn():
 @app.route('/XgB')
 def XgB():
 	db = DB()
-	df = db.get_data('*','XgB')
+	df = db.get_data('*','XgB').set_index('Date')
 
 	if (df.columns == 'Inference').any():
 		y=['Prediction','SMP','Inference']
@@ -72,7 +71,7 @@ def XgB():
 
 	metrics = get_metrics('XgB',db).iloc[0]
 	return render_template('model.jinja', title = 'XgB Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_fig(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'])
@@ -80,7 +79,7 @@ def XgB():
 @app.route('/Lstm')
 def lstm():
 	db = DB()
-	df = db.get_data('*','Lstm')
+	df = db.get_data('*','Lstm').set_index('Date')
 
 	if (df.columns == 'Inference').any():
 		y=['Prediction','SMP','Inference']
@@ -91,11 +90,11 @@ def lstm():
 
 	metrics = get_metrics('Lstm',db).iloc[0]
 	return render_template('lstm.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_fig(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'],
-							hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
+							hist_json = get_json_for_line_scatter(hist,hist.index,['hist_train','hist_val']))
 
 @app.route('/Hybrid_Lstm')
 def hybrid_lstm():
@@ -111,22 +110,27 @@ def hybrid_lstm():
 
 	metrics = get_metrics('Hybrid_Lstm',db).iloc[0]
 	return render_template('lstm.jinja', title = 'Hybrid Lstm Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_fig(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',y),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'],
-							hist_json = get_json_for_line_fig(hist,hist.index,['hist_train','hist_val']))
+							hist_json = get_json_for_line_scatter(hist,hist.index,['hist_train','hist_val']))
 
 @app.route('/api')
 def api():
-	db = DB()
-	df = {}
-	df['Linear'] = db.get_data('*','linear').set_index('Date')['Inference'].dropna().to_json()
-	df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna().to_json()
-	df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna().to_json()
-	df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna().to_json()
+	try:
+		db = DB()
+		df = {}
+		df['Date'] = db.get_data('*','linear')[-24:]['Date'].astype(str).to_list()
+		df['Linear'] = db.get_data('*','linear').set_index('Date')['Inference'].dropna().to_list()
+		df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna().to_list()
+		df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna().to_list()
+		df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna().to_list()
+		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm').set_index('Date')['Inference'].dropna().to_list()
+		return json.dumps(df)
+	except:
+		return 'No Prediction Possible'
 
-	return json.dumps(df)
 
 
 if __name__ == '__main__':

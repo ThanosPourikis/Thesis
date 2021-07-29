@@ -179,6 +179,11 @@ class LstmMVInput:
 			export['SMP'] = self.test.loc[:,'SMP']
 			return export.reset_index(),train_error,validate_error,test_error,hist
 		except:
-			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error,hist
+			export = pd.DataFrame()
+			export = self.test.iloc[:,-2:]
+			export['SMP'] = self.test.loc[:,'SMP']
+			export = export.loc[:,export.columns !='XGB']
+
+			return export.reset_index(),train_error,validate_error,test_error,hist
 
 		

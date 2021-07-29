@@ -1,3 +1,6 @@
+import json
+
+import sklearn
 from utils.database_interface import DB
 from models.XgB import XgbModel
 from sklearn import utils
@@ -11,10 +14,12 @@ import logging
 from utils.update_data import update
 import threading
 from sklearn.utils import shuffle
+from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 import xgboost
+import requests
 
 
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
@@ -86,13 +91,13 @@ def hybrid_lstm():
 
 	if df.isnull().values.any():
 		data = df.set_index('Date')
-		features = data.loc[:,data.columns != 'SMP'][:-24]
-		labels = data.loc[:,'SMP'][:-24]
+		features = data.loc[:,data.columns != 'SMP'][-(24*8):-24]
+		labels = data.loc[:,'SMP'][-(24*8):-24]
 		data = data.loc[:,data.columns != 'SMP']
 	else:
 		data = df.set_index('Date')
-		features = data.loc[:,data.columns != 'SMP']
-		labels = data.loc[:,'SMP']
+		features = data.loc[:,data.columns != 'SMP'][-(24*7):]
+		labels = data.loc[:,'SMP'][-(24*7):]
 		data = data.loc[:,data.columns != 'SMP']
 	
 
@@ -108,6 +113,8 @@ def hybrid_lstm():
 	gsX = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=100,max_depth= 8).fit(x_train,y_train)
 
 	df['XGB'] = gsX.predict(data)
+	# df = df.reset_index()
+	# df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
 
 	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24)
 	hybrid_lstm.train()
@@ -125,9 +132,20 @@ def hybrid_lstm():
 
 today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
-# update()
-# threading.Thread(target=linear).start()
-# threading.Thread(target=Knn).start()
-# threading.Thread(target=xgb).start()
-# threading.Thread(target=Lstm).start()
+update()
+threading.Thread(target=linear).start()
+threading.Thread(target=Knn).start()
+threading.Thread(target=xgb).start()
+threading.Thread(target=Lstm).start()
 threading.Thread(target=hybrid_lstm).start()
+
+
+# content = requests.get('http://thanospourikis.pythonanywhere.com/api')
+# jsonData = json.loads(content.content)
+# infe = pd.DataFrame(jsonData).set_index("Date")
+# db =DB()
+# df = db.get_data('*','train_set').set_index('Date')[-len(infe):]
+
+# for i in infe.columns:
+# 	mae = mean_absolute_error(df['SMP'],infe[i])
+# 	print(f'{i} : {mae}')

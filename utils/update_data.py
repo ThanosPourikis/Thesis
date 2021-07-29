@@ -1,7 +1,7 @@
 from utils.database_interface import DB
 from data.get_SMP_data import get_SMP_data
 from data.units_data import get_unit_data
-from data.isp1_data import get_isp_data
+from data.isp_data import get_isp_data
 from data.ADMHE_files import get_excel_data
 from data.get_weather_data import download_weather_data, get_weather_data
 import config
