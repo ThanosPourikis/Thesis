@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class XgbModel:
-	def __init__(self,data,validation_size =0.2):
+	def __init__(self,data,booster,validation_size =0.2):
 		data = data.set_index('Date')
 		if data.isnull().values.any():
 			self.inference = data[-24:]
@@ -21,6 +21,7 @@ class XgbModel:
 		self.features = data.loc[:,data.columns!='SMP'].reset_index(drop=True)
 		self.labels = (data.loc[:,data.columns=='SMP']).reset_index(drop=True)
 		self.data = data
+		self.booster = booster
 		self.parameters = {
 		"learning_rate": [0.09],
 		"max_depth": [10],
@@ -33,7 +34,7 @@ class XgbModel:
 
 		self.labels = self.labels.reset_index(drop = True).dropna()
 		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
-		self.model = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=100,max_depth= 8)
+		self.model = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=100,max_depth= 8,booster = self.booster,n_jobs= -1)
 		# cs = GridSearchCV(model, self.parameters)
 		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels,shuffle=True,random_state=96,
 																	test_size=self.validation_size)
@@ -49,7 +50,7 @@ class XgbModel:
 		validate_error = mean_absolute_error(self.y_validate, self.model.predict(self.x_validate))
 
 		pred = self.model.predict(self.test.loc[:,self.test.columns != 'SMP'])
-		test_error = mean_absolute_error(pred,self.test['SMP'])
+		test_error = mean_absolute_error(self.test['SMP'],pred)
 		self.test['Prediction'] = pred
 		try:
 			self.inference['Inference'] = self.model.predict(self.inference.loc[:,self.inference.columns != 'SMP'])

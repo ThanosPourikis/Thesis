@@ -36,7 +36,7 @@ class Linear:
 		validate_error = mean_absolute_error(self.y_validate, self.lr.predict(self.x_validate))
 
 		pred = self.lr.predict(self.test.loc[:,self.test.columns != 'SMP'])
-		test_error = mean_absolute_error(pred,self.test['SMP'])
+		test_error = mean_absolute_error(self.test['SMP'],pred)
 		self.test['Prediction'] = pred
 		try:
 			self.inference['Inference'] = self.lr.predict(self.inference.loc[:,self.inference.columns != 'SMP'])

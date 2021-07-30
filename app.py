@@ -25,17 +25,15 @@ def corrolations():
 @app.route('/Linear')
 def Linear_page():
 	db = DB()
-	df = db.get_data('*','linear').set_index('Date')
+	df = db.get_data('*','Linear').set_index('Date')
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Linear']
 
-	if (df.columns == 'Inference').any():
-		y=['Prediction','SMP','Inference']
-	else:
-		y=['Prediction','SMP']
 
-	metrics = get_metrics('linear',db).iloc[0]
+	metrics = get_metrics('Linear',db).iloc[0]
 
 	return render_template('model.jinja', title = 'Linear Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',df.columns),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error']
@@ -45,15 +43,12 @@ def Linear_page():
 def Knn():
 	db = DB()
 	df = db.get_data('*','Knn').set_index('Date')
-
-	if (df.columns == 'Inference').any():
-		y=['Prediction','SMP','Inference']
-	else:
-		y=['Prediction','SMP']
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Knn']
 
 	metrics = get_metrics('Knn',db).iloc[0]
 	return render_template('model.jinja', title = 'KnnR Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',df.columns),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'])
@@ -63,15 +58,12 @@ def Knn():
 def XgB():
 	db = DB()
 	df = db.get_data('*','XgB').set_index('Date')
-
-	if (df.columns == 'Inference').any():
-		y=['Prediction','SMP','Inference']
-	else:
-		y=['Prediction','SMP']
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['XgB']
 
 	metrics = get_metrics('XgB',db).iloc[0]
 	return render_template('model.jinja', title = 'XgB Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',df.columns),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'])
@@ -80,17 +72,14 @@ def XgB():
 def lstm():
 	db = DB()
 	df = db.get_data('*','Lstm').set_index('Date')
-
-	if (df.columns == 'Inference').any():
-		y=['Prediction','SMP','Inference']
-	else:
-		y=['Prediction','SMP']
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Lstm']
 
 	hist = db.get_data('*','hist_lstm')
 
 	metrics = get_metrics('Lstm',db).iloc[0]
 	return render_template('lstm.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',df.columns),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'],
@@ -99,18 +88,14 @@ def lstm():
 @app.route('/Hybrid_Lstm')
 def hybrid_lstm():
 	db = DB()
-	df = db.get_data('*','Hybrid_Lstm')
-
-	if (df.columns == 'Inference').any():
-		y=['Prediction','SMP','Inference']
-	else:
-		y=['Prediction','SMP']
-
+	df = db.get_data('*','Hybrid_Lstm').set_index('Date')
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Hybrid_Lstm']
 	hist = db.get_data('*','hist_Hybrid_Lstm')
-
+	
 	metrics = get_metrics('Hybrid_Lstm',db).iloc[0]
 	return render_template('lstm.jinja', title = 'Hybrid Lstm Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,'Date',y),
+							chart_json = get_json_for_line_scatter(df,'Date',df.columns),
 							train_error= metrics['train_error'],
 							validate_error = metrics['validate_error'],
 							test_error = metrics['test_error'],

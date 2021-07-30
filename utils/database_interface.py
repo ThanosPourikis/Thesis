@@ -24,4 +24,6 @@ class DB:
 			pass
 
 		return df
+	def save_inference_to_DB():
+		pass
 	

@@ -134,8 +134,8 @@ class LstmMVInput:
 	def get_results(self):
 
 
-		train_error = mean_absolute_error(self.y_train_prediction, self.y_train_denorm[-len(self.y_train_prediction):])
-		validate_error = mean_absolute_error(self.y_val_pred_denorm, self.y_validate_denorm[-len(self.y_val_pred_denorm):])
+		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
+		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
 
 		logging.info(f'Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
@@ -167,6 +167,7 @@ class LstmMVInput:
 		test_pred = y_test_scaler.inverse_transform(temp)
 		test_error = mean_absolute_error(y_test,test_pred)
 		self.test['Prediction'] = test_pred.flatten()
+
 		try:
 			x_infe,_ = sliding_windows(self.inference.loc[:,self.inference.columns != 'SMP'],self.inference.loc[:,'SMP'],sequence_len=24,window_step=24)
 			infe_scaler = MinMaxScaler(feature_range=(-1, 1))

@@ -1,6 +1,5 @@
 import json
 
-import sklearn
 from utils.database_interface import DB
 from models.XgB import XgbModel
 from sklearn import utils
@@ -14,12 +13,12 @@ import logging
 from utils.update_data import update
 import threading
 from sklearn.utils import shuffle
-from sklearn.metrics import mean_absolute_error
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 import xgboost
 import requests
+from sklearn.metrics import mean_absolute_error
 
 
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
@@ -30,13 +29,13 @@ def linear():
 	linear = Linear(data=df)
 	linear.train()
 	prediction,train_error,validate_error,test_error = linear.get_results()
-	db.save_df_to_db(prediction,'linear')
+	db.save_df_to_db(prediction,'Linear')
 
 	metrics = pd.DataFrame({
 		'train_error':train_error,
 		'validate_error':validate_error,
 		'test_error':test_error},index=[today])
-	utils.save_metrics(metrics,'linear',db)
+	utils.save_metrics(metrics,'Linear',db)
 
 
 
@@ -58,7 +57,7 @@ def Knn():
 def xgb():
 	db =DB()
 	df = db.get_data('*','train_set')
-	xgb = XgbModel(data=df)
+	xgb = XgbModel(data=df,booster='gbtree')
 	xgb.train()
 	prediction,train_error,validate_error,test_error = xgb.get_results()
 	db.save_df_to_db(prediction,'xgb')
@@ -129,22 +128,40 @@ def hybrid_lstm():
 		'test_error':test_error},index=[today])
 	utils.save_metrics(metrics,'Hybrid_Lstm',db)
 
+def save_infernce():
+	try:
+		db = DB()
+		df = pd.DataFrame()
+		df['Linear'] = db.get_data('*','Linear').set_index('Date')['Inference'].dropna()
+		df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna()
+		df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna()
+		df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna()
+		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm').set_index('Date')['Inference'].dropna()
+		db.save_df_to_db(df.reset_index(),'infernce')
+	except:
+		return 'No Prediction Possible'
+		
 
 today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
+save_infernce()
 update()
 threading.Thread(target=linear).start()
 threading.Thread(target=Knn).start()
 threading.Thread(target=xgb).start()
 threading.Thread(target=Lstm).start()
-threading.Thread(target=hybrid_lstm).start()
-
+end = threading.Thread(target=hybrid_lstm)
+end.start()
+end.join()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
 # infe = pd.DataFrame(jsonData).set_index("Date")
+
 # db =DB()
 # df = db.get_data('*','train_set').set_index('Date')[-len(infe):]
+# infe = db.get_data('*','infernce').set_index('Date')[-len(infe):]
+
 
 # for i in infe.columns:
 # 	mae = mean_absolute_error(df['SMP'],infe[i])
