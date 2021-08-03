@@ -71,7 +71,7 @@ def xgb():
 def Lstm():
 	db =DB()
 	df = db.get_data('*','train_set')
-	lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24)
+	lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
 	prediction,train_error,validate_error,test_error,hist = lstm.get_results()
 	db.save_df_to_db(hist,'hist_lstm')
@@ -115,7 +115,7 @@ def hybrid_lstm():
 	# df = df.reset_index()
 	# df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
 
-	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24)
+	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
 	prediction,train_error,validate_error,test_error,hist = hybrid_lstm.get_results()
 	db.save_df_to_db(hist,'hist_Hybrid_Lstm')
@@ -150,10 +150,7 @@ threading.Thread(target=linear).start()
 threading.Thread(target=Knn).start()
 threading.Thread(target=xgb).start()
 threading.Thread(target=Lstm).start()
-end = threading.Thread(target=hybrid_lstm)
-end.start()
-end.join()
-
+threading.Thread(target=hybrid_lstm).start()
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
 # infe = pd.DataFrame(jsonData).set_index("Date")

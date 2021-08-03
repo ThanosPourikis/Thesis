@@ -14,12 +14,13 @@ from torch.utils.data import DataLoader
 from models.lstm.utils import RequirementsSample, sliding_windows
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 from utils.database_interface import DB
 
 ### TODO Add Hybrid Code
 
 class LstmMVInput:
-	def __init__(self, loss_function, data,
+	def __init__(self, loss_function, data,name,
 				 learning_rate=0.001,
 				 validation_size= 0.2,
 				 sequence_length=24,
@@ -28,7 +29,7 @@ class LstmMVInput:
 				 num_layers=1,
 				 output_dim=1,
 				 num_epochs=150,
-				 model = None,):
+				 model = None):
 		data = data.set_index('Date')
 		if data.isnull().values.any():
 			self.inference = data[-24:]
@@ -51,13 +52,14 @@ class LstmMVInput:
 		self.output_dim = output_dim
 		self.num_epochs = num_epochs
 		self.learning_rate = learning_rate
+		self.name = name
 		self.model = model
 		self.db = DB()
 
 
 	def train(self):
 		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels, 
-		random_state=96,test_size=self.validation_size)
+		random_state=96,test_size=self.validation_size,shuffle=False)
 		
 		x_train,y_train = sliding_windows(self.x_train,self.y_train)
 		x_validate,y_validate = sliding_windows(self.x_validate,self.y_validate)
@@ -76,8 +78,7 @@ class LstmMVInput:
 		model = LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
 						num_layers=self.num_layers,batch_first=True)
 
-		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False)
-		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False)
+
 
 		self.criterion = torch.nn.L1Loss()
 		optimiser = torch.optim.Adam(model.parameters(), self.learning_rate)
@@ -89,7 +90,8 @@ class LstmMVInput:
 		models_dict = dict()
 		start_time = time.time()
 
-
+		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False)
+		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False)
 		for i in range(self.num_epochs):
 			err = []
 			for j, k in train_data_loader:
@@ -117,10 +119,10 @@ class LstmMVInput:
 				y_val_pred_arr.append(temp)
 			self.error_val[i] = sum(err)/len(err)
 			models_dict[i] = copy.deepcopy(model)
-			logging.info(f"Epoch\t Training\t {i} {self.loss_function}  {self.error_train[i]}\t Validation\t {i} {self.loss_function}  {self.error_val[i]}")
+			logging.info(f"{self.name} Epoch\t Training\t {i} {self.loss_function}  {self.error_train[i]}\t Validation\t {i} {self.loss_function}  {self.error_val[i]}")
 
 		self.best_epoch = self.error_val.argmin()
-		logging.info(f'Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time}')
+		logging.info(f'{self.name} Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time}')
 		self.model = models_dict[self.best_epoch]
 		y_train_pred_best = y_train_pred_arr[self.best_epoch][0]
 		y_val_pred_best = y_val_pred_arr[self.best_epoch][0]
@@ -137,7 +139,7 @@ class LstmMVInput:
 		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
 		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
 
-		logging.info(f'Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
+		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
 		hist['hist_train'] = self.error_train.tolist()
 		hist['hist_val'] = self.error_val.tolist()
@@ -173,18 +175,15 @@ class LstmMVInput:
 			infe_scaler = MinMaxScaler(feature_range=(-1, 1))
 			x_infe = infe_scaler.fit_transform(x_infe.squeeze()).reshape(x_infe.shape)
 			x_infe = torch.from_numpy(x_infe).type(torch.Tensor)
+			self.model.eval()
 			pred_arr = self.model(x_infe)
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			export = self.test.iloc[:,-2:]
-			export['SMP'] = self.test.loc[:,'SMP']
+			export = self.test.loc[:,['SMP','Prediction','Inference']]
 			return export.reset_index(),train_error,validate_error,test_error,hist
 		except:
 			export = pd.DataFrame()
-			export = self.test.iloc[:,-2:]
-			export['SMP'] = self.test.loc[:,'SMP']
-			export = export.loc[:,export.columns !='XGB']
-
+			export = self.test.loc[:,['SMP','Prediction']]
 			return export.reset_index(),train_error,validate_error,test_error,hist
 
 		
