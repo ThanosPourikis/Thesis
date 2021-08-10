@@ -10,12 +10,14 @@ def get_json_for_line_fig(df,x,y):
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-def get_json_for_line_scatter(df,x,y):
+def get_json_for_line_scatter(df,y,line = None):
 	fig = go.Figure()
 	for i in y:
 		fig.add_trace(go.Scatter(x=df.index, y=df[i],
 					mode='lines+markers',
 					name=df[i].name))
+		if line != None:
+			fig.add_vline(x=line,line_dash="dash", line_color="purple")
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 

@@ -1,5 +1,6 @@
 
 import logging
+from math import inf
 import time
 from os import path
 
@@ -83,16 +84,16 @@ class LstmMVInput:
 		self.criterion = torch.nn.L1Loss()
 		optimiser = torch.optim.Adam(model.parameters(), self.learning_rate)
 
-		self.error_train = np.zeros([self.num_epochs])
-		self.error_val = np.zeros([self.num_epochs])
+		self.error_train = np.empty(0)
+		self.error_val = np.empty(0)
 		y_train_pred_arr = list()
 		y_val_pred_arr = list()
-		models_dict = dict()
 		start_time = time.time()
 
 		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False)
 		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False)
-		for i in range(self.num_epochs):
+		while(True): # Early Stopping If error hasnt decrased in 50 epochs STOP
+		# for i in range(self.num_epochs):
 			err = []
 			for j, k in train_data_loader:
 				model.train()
@@ -105,9 +106,9 @@ class LstmMVInput:
 				loss.backward()
 				optimiser.step()
 			y_train_pred_arr.append(temp)
-			self.error_train[i] = sum(err) / len(err)
+			self.error_train = np.append(self.error_train, (sum(err) / len(err)))
 
-			with torch.set_grad_enabled(False):
+			with torch.set_grad_enabled(False):#I know, too Much but to be safe
 				model.eval()
 				err = []
 				for j, k in val_data_loader:
@@ -117,13 +118,19 @@ class LstmMVInput:
 						loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
 						err.append(loss.detach().item())
 				y_val_pred_arr.append(temp)
-			self.error_val[i] = sum(err)/len(err)
-			models_dict[i] = copy.deepcopy(model)
-			logging.info(f"{self.name} Epoch\t Training\t {i} {self.loss_function}  {self.error_train[i]}\t Validation\t {i} {self.loss_function}  {self.error_val[i]}")
+			self.error_val = np.append(self.error_val,(sum(err)/len(err)))
+
+			if self.error_val[-1] <= self.error_val.min() :
+				self.model = copy.deepcopy(model)
+
+			logging.info(f"{self.name} Epoch {len(self.error_val)} {self.loss_function} \t Training\t{self.error_train[-1]}\t Validation\t{self.error_val[-1]}")
+			
+			if (len(self.error_val) - self.error_val.argmin()) > 50:
+				break
 
 		self.best_epoch = self.error_val.argmin()
 		logging.info(f'{self.name} Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time}')
-		self.model = models_dict[self.best_epoch]
+
 		y_train_pred_best = y_train_pred_arr[self.best_epoch][0]
 		y_val_pred_best = y_val_pred_arr[self.best_epoch][0]
 
@@ -180,10 +187,10 @@ class LstmMVInput:
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
 			export = self.test.loc[:,['SMP','Prediction','Inference']]
-			return export.reset_index(),train_error,validate_error,test_error,hist
+			return export.reset_index(),train_error,validate_error,test_error,hist,self.best_epoch
 		except:
 			export = pd.DataFrame()
 			export = self.test.loc[:,['SMP','Prediction']]
-			return export.reset_index(),train_error,validate_error,test_error,hist
+			return export.reset_index(),train_error,validate_error,test_error,hist,self.best_epoch
 
 		

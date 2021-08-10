@@ -44,14 +44,13 @@ def Knn():
 	df = db.get_data('*','train_set')
 	knn = KnnModel(data=df)
 	knn.train()
-	prediction,train_error,validate_error,test_error,best_params_ = knn.get_results()
+	prediction,train_error,validate_error,test_error = knn.get_results()
 	db.save_df_to_db(prediction,'knn')
 
 	metrics = pd.DataFrame({
 		'train_error':train_error,
 		'validate_error':validate_error,
-		'test_error':test_error,
-		'best_params_':best_params_['n_neighbors']},index=[today])
+		'test_error':test_error},index=[today])
 	utils.save_metrics(metrics,'knn',db)
 
 def xgb():
@@ -73,7 +72,7 @@ def Lstm():
 	df = db.get_data('*','train_set')
 	lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
-	prediction,train_error,validate_error,test_error,hist = lstm.get_results()
+	prediction,train_error,validate_error,test_error,hist,best_epoch = lstm.get_results()
 	db.save_df_to_db(hist,'hist_lstm')
 
 	db.save_df_to_db(prediction,'lstm')
@@ -81,7 +80,9 @@ def Lstm():
 	metrics = pd.DataFrame({
 		'train_error':train_error,
 		'validate_error':validate_error,
-		'test_error':test_error},index=[today])
+		'test_error':test_error,
+		'best_epoch' : best_epoch},index=[today]
+		)
 	utils.save_metrics(metrics,'lstm',db)
 
 def hybrid_lstm():
@@ -109,15 +110,22 @@ def hybrid_lstm():
 	gsK = GridSearchCV(KNeighborsRegressor(),{'n_neighbors': range(1, 50)}).fit(x_train,y_train)
 	df['Knn'] = gsK.predict(data)
 
-	gsX = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=100,max_depth= 8).fit(x_train,y_train)
+	gsX = xgboost.XGBRegressor(learning_rate = 0.1,
+								colsample_bytree = 1,
+								colsample_bylevel=0.8,
+								subsample=0.8,
+								n_estimators=49,
+								max_depth= 9,
+								n_jobs= -1).fit(x_train,y_train)
 
 	df['XGB'] = gsX.predict(data)
+
 	# df = df.reset_index()
 	# df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
 
 	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
-	prediction,train_error,validate_error,test_error,hist = hybrid_lstm.get_results()
+	prediction,train_error,validate_error,test_error,hist,best_epoch = hybrid_lstm.get_results()
 	db.save_df_to_db(hist,'hist_Hybrid_Lstm')
 
 	db.save_df_to_db(prediction,'Hybrid_Lstm')
@@ -125,7 +133,8 @@ def hybrid_lstm():
 	metrics = pd.DataFrame({
 		'train_error':train_error,
 		'validate_error':validate_error,
-		'test_error':test_error},index=[today])
+		'test_error':test_error,
+		'best_epoch' : best_epoch},index=[today])
 	utils.save_metrics(metrics,'Hybrid_Lstm',db)
 
 def save_infernce():
@@ -145,12 +154,13 @@ def save_infernce():
 today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
 save_infernce()
-update()
-threading.Thread(target=linear).start()
+# update()
+# threading.Thread(target=linear).start()
 threading.Thread(target=Knn).start()
-threading.Thread(target=xgb).start()
-threading.Thread(target=Lstm).start()
-threading.Thread(target=hybrid_lstm).start()
+# threading.Thread(target=xgb).start()
+# threading.Thread(target=Lstm).start()
+# threading.Thread(target=hybrid_lstm).start()
+
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
 # infe = pd.DataFrame(jsonData).set_index("Date")
