@@ -9,8 +9,8 @@ from sklearn.neighbors import KNeighborsRegressor
 
 class KnnModel:
 	def __init__(self, data, n_neighbors_parameters = 50, validation_size =0.2):
-		self.data = data
 		data = data.set_index('Date')
+		# data = data.loc[:,['Renewables','Non-Dispatcheble','Man_Hydro','SMP']]
 		if data.isnull().values.any():
 			self.inference = data[-24:]
 			self.test = data[-(8*24):-24]

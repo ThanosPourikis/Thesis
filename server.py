@@ -70,7 +70,7 @@ def xgb():
 def Lstm():
 	db =DB()
 	df = db.get_data('*','train_set')
-	lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Vanilla')
+	lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
 	prediction,train_error,validate_error,test_error,hist,best_epoch = lstm.get_results()
 	db.save_df_to_db(hist,'hist_lstm')
@@ -154,12 +154,12 @@ def save_infernce():
 today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
 save_infernce()
-# update()
-# threading.Thread(target=linear).start()
+update()
+threading.Thread(target=linear).start()
 threading.Thread(target=Knn).start()
-# threading.Thread(target=xgb).start()
-# threading.Thread(target=Lstm).start()
-# threading.Thread(target=hybrid_lstm).start()
+threading.Thread(target=xgb).start()
+threading.Thread(target=Lstm).start()
+threading.Thread(target=hybrid_lstm).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)

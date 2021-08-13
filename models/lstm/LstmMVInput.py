@@ -125,7 +125,7 @@ class LstmMVInput:
 
 			logging.info(f"{self.name} Epoch {len(self.error_val)} {self.loss_function} \t Training\t{self.error_train[-1]}\t Validation\t{self.error_val[-1]}")
 			
-			if (len(self.error_val) - self.error_val.argmin()) > 50:
+			if (len(self.error_val) - self.error_val.argmin()) > self.num_epochs:
 				break
 
 		self.best_epoch = self.error_val.argmin()
