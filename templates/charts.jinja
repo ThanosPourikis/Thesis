@@ -1,25 +1,38 @@
 {% extends 'base.jinja' %}
-fif
 {% block content %}
 	<h1>{{title}}</h1>
-	{% for i in df.columns %}
-		</div>
 	<div class="row">
+		<div class="col-xs-1-12">
+				<div class="card">
+					<div class="card-body">
+						<h3 class="card-title">Candlesticks</h3>
+						<div  id='candlestick'>
+							<script>
+								var graph = {{ candlestick}};
+								Plotly.plot('candlestick', graph, {});
+							</script>
+						</div>
+					</div>
+				</div>
+			</div>
+
+	{% for i in df.columns %}
 		<div class="col-xs-1-12">
 			<div class="card">
 				<div class="card-body">
 					<h3 class="card-title">{{i}}</h3>
 					<div  id='{{i}}'>
 						<script>
-							var graph = {{ get_json(df,x,i) | safe }};
+							var graph = {{ get_json(df,df.index,i) | safe }};
 							Plotly.plot('{{i}}', graph, {});
 						</script>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 	{% endfor %}
+
+	</div>
 {% endblock content %}
 
 

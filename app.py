@@ -2,7 +2,7 @@ import flask
 from flask import render_template
 
 from utils.database_interface import DB
-from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter
+from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter,get_candlesticks
 from datetime import date
 import pandas as pd
 import json
@@ -13,14 +13,14 @@ today = pd.to_datetime(date.today())
 def index():
 	db = DB()
 	df = db.get_data('*', 'dataset')[-(7*24):].set_index('Date')
-	return render_template('charts.jinja',title = 'Train Data For The Past 7 Days',df=df,get_json = get_json_for_line_fig,x=df.index)
+	return render_template('charts.jinja',title = 'Train Data For The Past 7 Days',df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP))
 
 @app.route('/Correlation')
 def corrolations():
 	db = DB()
 	df = db.get_data('*', 'dataset')[-(7*24):].set_index('SMP')
 	df = df.iloc[:,df.columns!='Date'].dropna()
-	return render_template('charts.jinja',title = 'Correlation',df=df,get_json = get_json_for_fig_scatter,x=df.index)
+	return render_template('charts.jinja',title = 'Correlation For The Past 7 Days',df=df,get_json = get_json_for_fig_scatter)
 
 @app.route('/Linear')
 def Linear_page():
