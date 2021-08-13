@@ -37,17 +37,17 @@ def get_candlesticks(df):
 	# export['High'] = [df[i:i+24].max() for i in range(0,len(df),24)]
 	for i in range(0,len(df),24):
 		temp = pd.DataFrame()
-		temp.index = [df[i:i+24].index[0]]
+		temp['Date'] = [df[i:i+24].index[0]]
 		temp['high'] = df[i:i+24].max()
 		temp['low'] = df[i:i+24].min()
 		temp['open'] = df[i:i+24].iloc[0]
 		temp['close'] = df[i:i+24].iloc[-1]
+		temp = temp.set_index('Date')
 		export = pd.concat([export,temp])
 
 	fig = go.Figure()
 	fig = go.Figure(data=[go.Candlestick(x=export.index,
-                open=export['open'], high=export['high'],
-                low=export['low'], close=export['close'])
-                     ])
-	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
-	
+				open=export['open'], high=export['high'],
+				low=export['low'], close=export['close'])
+					 ])
+	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
