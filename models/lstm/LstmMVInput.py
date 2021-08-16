@@ -140,26 +140,27 @@ class LstmMVInput:
 		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
 		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
 
-	def get_results(self):
-
-
-		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
-		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
-
+	def get_results(self,test = None):
+		if test ==None:
+			test = self.test
+		# train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
+		# validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
+		train_error = self.error_train[self.best_epoch]
+		validate_error = self.error_val[self.best_epoch]
 		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
 		hist['hist_train'] = self.error_train.tolist()
 		hist['hist_val'] = self.error_val.tolist()
 		
 		
-		x_test,y_test = sliding_windows(self.test.loc[:,self.test.columns != 'SMP'],self.test.loc[:,'SMP'],sequence_len=24,window_step=24)
+		x_test,y_test = sliding_windows(test.loc[:,test.columns != 'SMP'],test.loc[:,'SMP'],sequence_len=24,window_step=24)
 		
 		x_test_scaler = MinMaxScaler(feature_range=(-1, 1))
 		x_test = x_test_scaler.fit_transform(x_test.reshape(-1, x_test.shape[-1])).reshape(x_test.shape)
 		# x_test = torch.from_numpy(x_test).type(torch.Tensor)
 		
 		y_test_scaler = MinMaxScaler(feature_range=(-1, 1))
-		y_test_scaler.fit_transform(y_test)
+		y_test = y_test_scaler.fit_transform(y_test)
 		# y_test = torch.from_numpy(y_test).type(torch.Tensor)
 		
 		with torch.set_grad_enabled(False):
@@ -174,7 +175,9 @@ class LstmMVInput:
 					loss = self.criterion(pred_arr.squeeze(),k.squeeze().float())
 					err.append(loss.detach().item())
 		test_pred = y_test_scaler.inverse_transform(temp)
-		test_error = mean_absolute_error(y_test,test_pred)
+		y_test = y_test_scaler.inverse_transform(y_test)
+		# test_error = mean_absolute_error(y_test,test_pred)
+		test_error = sum(err)/len(err)
 		self.test['Prediction'] = test_pred.flatten()
 
 		try:
