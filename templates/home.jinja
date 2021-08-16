@@ -1,8 +1,23 @@
 {% extends 'base.jinja' %}
 {% block content %}
 	<h1>{{title}}</h1>
+	<div class="row">
+		<div class="col-xs-1-12">
+				<div class="card">
+					<div class="card-body">
+						<h3 class="card-title">Candlesticks</h3>
+						<div  id='candlestick'>
+							<script>
+								var graph = {{ candlestick}};
+								Plotly.plot('candlestick', graph, {});
+							</script>
+						</div>
+					</div>
+				</div>
+			</div>
 
 	{% include "charts.jinja" %}
+	</div>
 	
 {% endblock content %}
 

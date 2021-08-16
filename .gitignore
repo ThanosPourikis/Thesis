@@ -14,3 +14,4 @@ config.py
 test.json
 units/
 *\.log
+tet.txt

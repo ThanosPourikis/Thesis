@@ -1,21 +1,3 @@
-{% extends 'base.jinja' %}
-{% block content %}
-	<h1>{{title}}</h1>
-	<div class="row">
-		<div class="col-xs-1-12">
-				<div class="card">
-					<div class="card-body">
-						<h3 class="card-title">Candlesticks</h3>
-						<div  id='candlestick'>
-							<script>
-								var graph = {{ candlestick}};
-								Plotly.plot('candlestick', graph, {});
-							</script>
-						</div>
-					</div>
-				</div>
-			</div>
-
 	{% for i in df.columns %}
 		<div class="col-xs-1-12">
 			<div class="card">
@@ -31,9 +13,6 @@
 			</div>
 		</div>
 	{% endfor %}
-
-	</div>
-{% endblock content %}
 
 
 

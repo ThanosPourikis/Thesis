@@ -120,10 +120,10 @@ def hybrid_lstm():
 
 	df['XGB'] = gsX.predict(data)
 
-	# df = df.reset_index()
-	# df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
+	df = df.reset_index()
+	df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
 
-	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=50,batch_size=32,sequence_length=24,name = 'Hybrid')
+	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
 	prediction,train_error,validate_error,test_error,hist,best_epoch = hybrid_lstm.get_results()
 	db.save_df_to_db(hist,'hist_Hybrid_Lstm')
