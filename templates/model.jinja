@@ -6,22 +6,27 @@
 		var graph = {{ chart_json | safe }};
 		Plotly.plot('chart_json', graph, {});
 	</script>
+
 	<table class="table">
+	{% for i in metrics.index %}
 		<thead>
 			<tr>
-				<th>Train error</th>
-				<th>Validation error</th>
-				<th>Test error</th>
+				<th>Train {{i}}</th>
+				<th>Validation {{i}}</th>
+				<th>Test {{i}}</th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
-				<td scope="row">{{train_error}}</td>
-				<td>{{validate_error}}</td>
-				<td>{{test_error}}</td>
+				<td scope="row">{{metrics.loc[i,'Train']}}</td>
+				<td>{{metrics.loc[i,'Validation']}}</td>
+				<td>{{metrics.loc[i,'Test']}}</td>
 			</tr>
 		</tbody>
+	{% endfor %}
+
 	</table>
+
 	{{ model }}
 	{% block more_data %}
 	{% endblock more_data %}

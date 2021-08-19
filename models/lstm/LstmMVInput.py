@@ -10,12 +10,12 @@ from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import copy
 
+from models.utils import get_metrics_df
 from models.lstm.Lstm_model import LSTM
 from torch.utils.data import DataLoader
 from models.lstm.utils import RequirementsSample, sliding_windows
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
 from utils.database_interface import DB
 
 ### TODO Add Hybrid Code
@@ -143,10 +143,8 @@ class LstmMVInput:
 	def get_results(self,test = None):
 		if test ==None:
 			test = self.test
-		# train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
-		# validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
-		train_error = self.error_train[self.best_epoch]
-		validate_error = self.error_val[self.best_epoch]
+		train_error = r2_score(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
+		validate_error = r2_score(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
 		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
 		hist['hist_train'] = self.error_train.tolist()
@@ -176,8 +174,12 @@ class LstmMVInput:
 					err.append(loss.detach().item())
 		test_pred = y_test_scaler.inverse_transform(temp)
 		y_test = y_test_scaler.inverse_transform(y_test)
-		# test_error = mean_absolute_error(y_test,test_pred)
-		test_error = sum(err)/len(err)
+
+		metrics = get_metrics_df(
+			self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction,
+			self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm,
+			y_test,test_pred)
+
 		self.test['Prediction'] = test_pred.flatten()
 
 		try:
@@ -190,10 +192,10 @@ class LstmMVInput:
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
 			export = self.test.loc[:,['SMP','Prediction','Inference']]
-			return export.reset_index(),train_error,validate_error,test_error,hist,self.best_epoch
+			return export.reset_index(),metrics,hist,self.best_epoch
 		except:
 			export = pd.DataFrame()
 			export = self.test.loc[:,['SMP','Prediction']]
-			return export.reset_index(),train_error,validate_error,test_error,hist,self.best_epoch
+			return export.reset_index(),metrics,hist,self.best_epoch
 
 		

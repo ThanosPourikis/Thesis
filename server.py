@@ -8,7 +8,6 @@ import pandas as pd
 from models.KnnModel import KnnModel
 from models.Linear import Linear
 from utils import utils
-from datetime import date
 import logging
 from utils.update_data import update
 import threading
@@ -18,7 +17,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
 import xgboost
 import requests
-from sklearn.metrics import mean_absolute_error
 
 
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
@@ -28,13 +26,8 @@ def linear():
 	df = db.get_data('*','train_set')
 	linear = Linear(data=df)
 	linear.train()
-	prediction,train_error,validate_error,test_error = linear.get_results()
+	prediction,metrics = linear.get_results()
 	db.save_df_to_db(prediction,'Linear')
-
-	metrics = pd.DataFrame({
-		'train_error':train_error,
-		'validate_error':validate_error,
-		'test_error':test_error},index=[today])
 	utils.save_metrics(metrics,'Linear',db)
 
 
@@ -44,13 +37,9 @@ def Knn():
 	df = db.get_data('*','train_set')
 	knn = KnnModel(data=df)
 	knn.train()
-	prediction,train_error,validate_error,test_error = knn.get_results()
+	prediction,metrics = knn.get_results()
 	db.save_df_to_db(prediction,'knn')
 
-	metrics = pd.DataFrame({
-		'train_error':train_error,
-		'validate_error':validate_error,
-		'test_error':test_error},index=[today])
 	utils.save_metrics(metrics,'knn',db)
 
 def xgb():
@@ -58,13 +47,9 @@ def xgb():
 	df = db.get_data('*','train_set')
 	xgb = XgbModel(data=df,booster='gbtree')
 	xgb.train()
-	prediction,train_error,validate_error,test_error = xgb.get_results()
+	prediction,metrics = xgb.get_results()
 	db.save_df_to_db(prediction,'xgb')
 
-	metrics = pd.DataFrame({
-		'train_error':train_error,
-		'validate_error':validate_error,
-		'test_error':test_error},index=[today])
 	utils.save_metrics(metrics,'xgb',db)
 
 def Lstm():
@@ -72,17 +57,11 @@ def Lstm():
 	df = db.get_data('*','train_set')
 	lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
-	prediction,train_error,validate_error,test_error,hist,best_epoch = lstm.get_results()
+	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db.save_df_to_db(hist,'hist_lstm')
 
 	db.save_df_to_db(prediction,'lstm')
-
-	metrics = pd.DataFrame({
-		'train_error':train_error,
-		'validate_error':validate_error,
-		'test_error':test_error,
-		'best_epoch' : best_epoch},index=[today]
-		)
+	metrics['best_epoch'] = best_epoch
 	utils.save_metrics(metrics,'lstm',db)
 
 def hybrid_lstm():
@@ -125,16 +104,11 @@ def hybrid_lstm():
 
 	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
-	prediction,train_error,validate_error,test_error,hist,best_epoch = hybrid_lstm.get_results()
+	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
 	db.save_df_to_db(hist,'hist_Hybrid_Lstm')
 
 	db.save_df_to_db(prediction,'Hybrid_Lstm')
-
-	metrics = pd.DataFrame({
-		'train_error':train_error,
-		'validate_error':validate_error,
-		'test_error':test_error,
-		'best_epoch' : best_epoch},index=[today])
+	metrics['best_epoch'] = best_epoch
 	utils.save_metrics(metrics,'Hybrid_Lstm',db)
 
 def save_infernce():
@@ -151,7 +125,6 @@ def save_infernce():
 		return 'No Prediction Possible'
 		
 
-today = pd.to_datetime(date.today()) #+ timedelta(days= 1)
 
 save_infernce()
 update()

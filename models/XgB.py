@@ -1,8 +1,8 @@
 import logging
 import xgboost
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import mean_absolute_error
 import pandas as pd
+from models.utils import get_metrics_df
 
 
 
@@ -55,16 +55,17 @@ class XgbModel:
 		# cs.fit(x_train,y_train)
 		# model=xgboost.XGBRegressor(**cs.best_params_)
 	def get_results(self):
-		train_error = mean_absolute_error(self.y_train, self.model.predict(self.x_train))
-		validate_error = mean_absolute_error(self.y_validate, self.model.predict(self.x_validate))
-		self.model.fit(self.x_validate,self.y_validate)
-		
+		# self.model.fit(self.x_validate,self.y_validate)
+
 		pred = self.model.predict(self.test.loc[:,self.test.columns != 'SMP'])
-		test_error = mean_absolute_error(self.test['SMP'],pred)
+		metrics = get_metrics_df(
+			self.y_train,self.model.predict(self.x_train),
+			self.y_validate,self.model.predict(self.x_validate),
+			self.test.loc[:,'SMP'],pred)
 		self.test['Prediction'] = pred
 		try:
 			self.inference['Inference'] = self.model.predict(self.inference.loc[:,self.inference.columns != 'SMP'])
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			return self.test.iloc[:,-3:].reset_index(),train_error,validate_error,test_error
+			return self.test.iloc[:,-3:].reset_index(),metrics
 		except:
-			return self.test.iloc[:,-2:].reset_index(),train_error,validate_error,test_error
+			return self.test.iloc[:,-2:].reset_index(),metrics

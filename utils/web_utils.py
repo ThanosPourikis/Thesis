@@ -17,7 +17,7 @@ def get_json_for_line_scatter(df,y,line = None):
 					mode='lines+markers',
 					name=df[i].name))
 		if line != None:
-			fig.add_vline(x=line,line_dash="dash", line_color="purple")
+			fig.add_vline(x=line,line_dash="dash", line_color="purple",annotation_text = 'Best Epoch')
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 
@@ -28,7 +28,7 @@ def get_json_for_fig_scatter(df,x,y):
 
 def get_metrics(model,db):
 	metrics = db.get_data('*',f'metrics_{model}')
-	metrics.index = pd.to_datetime(metrics.index)
+	# metrics.index = pd.to_datetime(metrics.index)
 	return metrics
 
 
