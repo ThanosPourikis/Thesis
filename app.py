@@ -9,6 +9,21 @@ import json
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 today = pd.to_datetime(date.today())
+models = ['Linear','KnnR','XgB','Lstm','Hybrid_Lstm']
+
+def page(name):
+	db = DB()
+	df = db.get_data('*',name).set_index('Date')
+	if not 'Inference' in df.columns:
+		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')[name]
+
+	metrics = get_metrics(name,db)
+
+	return render_template('model.jinja', title = f'{name} Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_scatter(df,df.columns),
+							metrics = metrics
+							)
+
 @app.route('/')
 def index():
 	db = DB()
@@ -23,44 +38,18 @@ def corrolations():
 	return render_template('correlation.jinja',title = 'Correlation For The Past 7 Days',df=df,get_json = get_json_for_fig_scatter)
 
 @app.route('/Linear')
-def Linear_page():
-	db = DB()
-	df = db.get_data('*','Linear').set_index('Date')
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Linear']
+def linear_page():
+	return page('Linear')
 
-	metrics = get_metrics('Linear',db)
-
-	return render_template('model.jinja', title = 'Linear Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics
-							)
-
-@app.route('/KnnR')
-def Knn():
-	db = DB()
-	df = db.get_data('*','Knn').set_index('Date')
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Knn']
-
-	metrics = get_metrics('Knn',db)
-	return render_template('model.jinja', title = 'KnnR Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics)
+@app.route('/Knn')
+def knn():
+	return page('Knn')
 
 
 
 @app.route('/XgB')
-def XgB():
-	db = DB()
-	df = db.get_data('*','XgB').set_index('Date')
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['XgB']
-
-	metrics = get_metrics('XgB',db)
-	return render_template('model.jinja', title = 'XgB Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics)
+def xgB():
+	return page('XgB')
 
 @app.route('/Lstm')
 def lstm():
@@ -89,10 +78,10 @@ def hybrid_lstm():
 	return render_template('lstm.jinja', title = 'Hybrid Lstm Model Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,
-							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics['best_epoch'][0]))
+							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']))
 
-@app.route('/api')
-def api():
+@app.route('/prices_api')
+def prices_api():
 	try:
 		db = DB()
 		df = {}
@@ -105,9 +94,14 @@ def api():
 		return json.dumps(df)
 	except:
 		return 'No Prediction Possible'
-
-
-
+@app.route('/metrics_api/<algo>')
+def metrics_api(algo):
+	
+	db = DB()
+	try : 
+		return get_metrics(algo,db).to_json()
+	except:
+		return "WRONG"
 if __name__ == '__main__':
 	
 	app.run(host="localhost", port=8000, debug=True)
