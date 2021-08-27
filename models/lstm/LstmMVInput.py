@@ -14,7 +14,7 @@ from models.utils import get_metrics_df
 from models.lstm.Lstm_model import LSTM
 from torch.utils.data import DataLoader
 from models.lstm.utils import RequirementsSample, sliding_windows
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
 from utils.database_interface import DB
 
@@ -31,7 +31,7 @@ class LstmMVInput:
 				 output_dim=1,
 				 num_epochs=150,
 				 model = None):
-		data = data.set_index('Date')
+		# data = data.set_index('Date')
 		if data.isnull().values.any():
 			self.inference = data[-24:]
 			self.test = data[-(8*24):-24]
@@ -143,8 +143,8 @@ class LstmMVInput:
 	def get_results(self,test = None):
 		if test ==None:
 			test = self.test
-		train_error = r2_score(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
-		validate_error = r2_score(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
+		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
+		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
 		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
 		hist = pd.DataFrame()
 		hist['hist_train'] = self.error_train.tolist()
@@ -192,10 +192,10 @@ class LstmMVInput:
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
 			export = self.test.loc[:,['SMP','Prediction','Inference']]
-			return export.reset_index(),metrics,hist,self.best_epoch
+			return export,metrics,hist,self.best_epoch
 		except:
 			export = pd.DataFrame()
 			export = self.test.loc[:,['SMP','Prediction']]
-			return export.reset_index(),metrics,hist,self.best_epoch
+			return export,metrics,hist,self.best_epoch
 
 		

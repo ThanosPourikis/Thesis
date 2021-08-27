@@ -9,7 +9,7 @@ from sklearn.neighbors import KNeighborsRegressor
 
 class KnnModel:
 	def __init__(self, data, validation_size =0.2):
-		data = data.set_index('Date')
+		# data = data.set_index('Date')
 		# data = data.loc[:,['Renewables','Non-Dispatcheble','Man_Hydro','SMP']]
 		if data.isnull().values.any():
 			self.inference = data[-24:]
@@ -18,8 +18,9 @@ class KnnModel:
 		else:
 			self.test = data[-(7*24):]
 			data = data[:-(7*24)]
+
 		self.features = data.loc[:,data.columns!='SMP']
-		self.labels = (data.loc[:,data.columns=='SMP'])
+		self.labels = data.loc[:,'SMP']
 		self.validation_size = validation_size
 		self.params = {'leaf_size': [10], 'n_neighbors': [5]}
 		
@@ -48,7 +49,7 @@ class KnnModel:
 		try:
 			self.inference['Inference'] = self.model.predict(self.inference.loc[:,self.inference.columns != 'SMP'])
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			return self.test.iloc[:,-3:].reset_index(),metrics
+			return self.test.iloc[:,-3:],metrics
 
 		except:
-			return self.test.iloc[:,-2:].reset_index(),metrics
+			return self.test.iloc[:,-2:],metrics

@@ -28,17 +28,17 @@ def get_SMP_data(new_files = True):
 				temp['Date'] = df.iloc[1][0]
 				print(f'Proccessing {name}')
 				for i in range(len(temp['Date'])):
-					temp.loc[i,'Date'] += timedelta(hours = i)
+					temp.loc[i,'Date'] += timedelta(hours = i+1)
 				temp['Date'] = [localTz.localize(x) for x in temp['Date']]
-				
-				export= export.append(temp,ignore_index=True)
+				temp = temp.set_index('Date')
+				export = pd.concat([export,temp])
 		except:
 			print('Not xlsx File')
 
-	export.columns = ['SMP','Date']
-	export = export.set_index('Date').sort_index()
+	export.columns = ['SMP']
+	export = export.sort_index()
 	export.to_csv('datasets/SMP.csv')
-	return export.reset_index()
+	return export
 	
 
 # pool = Pool()

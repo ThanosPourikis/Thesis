@@ -13,9 +13,9 @@ models = ['Linear','KnnR','XgB','Lstm','Hybrid_Lstm']
 
 def page(name):
 	db = DB()
-	df = db.get_data('*',name).set_index('Date')
+	df = db.get_data('*',name)
 	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')[name]
+		df['Previous Prediction'] = db.get_data('*','infernce')[name]
 
 	metrics = get_metrics(name,db)
 
@@ -54,9 +54,9 @@ def xgB():
 @app.route('/Lstm')
 def lstm():
 	db = DB()
-	df = db.get_data('*','Lstm').set_index('Date')
+	df = db.get_data('*','Lstm')
 	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Lstm']
+		df['Previous Prediction'] = db.get_data('*','infernce')['Lstm']
 
 	hist = db.get_data('*','hist_lstm')
 
@@ -69,9 +69,9 @@ def lstm():
 @app.route('/Hybrid_Lstm')
 def hybrid_lstm():
 	db = DB()
-	df = db.get_data('*','Hybrid_Lstm').set_index('Date')
+	df = db.get_data('*','Hybrid_Lstm')
 	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce').set_index('Date')['Hybrid_Lstm']
+		df['Previous Prediction'] = db.get_data('*','infernce')['Hybrid_Lstm']
 	hist = db.get_data('*','hist_Hybrid_Lstm')
 	
 	metrics = get_metrics('Hybrid_Lstm',db)

@@ -9,7 +9,7 @@ from models.utils import get_metrics_df
 class Linear:
 	def __init__(self, data, validation_size=0.2):
 		# self.features = data.loc[:,data.columns!='SMP']
-		data = data.set_index('Date')
+		# data = data.set_index('Date')
 		if data.isnull().values.any():
 			self.inference = data[-24:]
 			self.test = data[-(8*24):-24]
@@ -20,7 +20,7 @@ class Linear:
 
 
 		self.features = data.loc[:,data.columns!='SMP']
-		self.labels = (data.loc[:,data.columns=='SMP'])
+		self.labels = (data.loc[:,'SMP'])
 		self.validation_size = validation_size
 
 
@@ -44,8 +44,8 @@ class Linear:
 		try:
 			self.inference['Inference'] = self.model.predict(self.inference.loc[:,self.inference.columns != 'SMP'])
 			self.test = pd.concat([self.test,self.inference['Inference']],axis=1)
-			return self.test.iloc[:,-3:].reset_index(),metrics
+			return self.test.iloc[:,-3:],metrics
 		except:
-			return self.test.iloc[:,-2:].reset_index(),metrics
+			return self.test.iloc[:,-2:],metrics
 
 		

@@ -20,10 +20,10 @@ import requests
 
 
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
-
+dataset = 'requirements_units'
 def linear():
 	db =DB()
-	df = db.get_data('*','train_set')
+	df = db.get_data('*',dataset)
 	linear = Linear(data=df)
 	linear.train()
 	prediction,metrics = linear.get_results()
@@ -34,7 +34,7 @@ def linear():
 
 def Knn():
 	db =DB()
-	df = db.get_data('*','train_set')
+	df = db.get_data('*',dataset)
 	knn = KnnModel(data=df)
 	knn.train()
 	prediction,metrics = knn.get_results()
@@ -44,8 +44,8 @@ def Knn():
 
 def xgb():
 	db =DB()
-	df = db.get_data('*','train_set')
-	xgb = XgbModel(data=df,booster='gbtree')
+	df = db.get_data('*',dataset)
+	xgb = XgbModel(data=df)
 	xgb.train()
 	prediction,metrics = xgb.get_results()
 	db.save_df_to_db(prediction,'xgb')
@@ -54,7 +54,7 @@ def xgb():
 
 def Lstm():
 	db =DB()
-	df = db.get_data('*','train_set')
+	df = db.get_data('*',dataset)
 	lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
@@ -66,17 +66,17 @@ def Lstm():
 
 def hybrid_lstm():
 	db =DB()
-	df = db.get_data('*','train_set')
+	df = db.get_data('*',dataset)
 
 	if df.isnull().values.any():
-		data = df.set_index('Date')
-		features = data.loc[:,data.columns != 'SMP'][-(24*8):-24]
-		labels = data.loc[:,'SMP'][-(24*8):-24]
+		data = df.copy()
+		features = data.loc[:,data.columns != 'SMP'][:-(24*8)]
+		labels = data.loc[:,'SMP'][:-(24*8)]
 		data = data.loc[:,data.columns != 'SMP']
 	else:
-		data = df.set_index('Date')
-		features = data.loc[:,data.columns != 'SMP'][-(24*7):]
-		labels = data.loc[:,'SMP'][-(24*7):]
+		data = df.copy()
+		features = data.loc[:,data.columns != 'SMP'][:-(24*7)]
+		labels = data.loc[:,'SMP'][:-(24*7)]
 		data = data.loc[:,data.columns != 'SMP']
 	
 
@@ -86,7 +86,7 @@ def hybrid_lstm():
 	df['Linear'] = lr.predict(data)
 
 
-	gsK = GridSearchCV(KNeighborsRegressor(),{'n_neighbors': range(1, 50)}).fit(x_train,y_train)
+	gsK = KNeighborsRegressor(49,n_jobs=-1).fit(x_train, y_train)
 	df['Knn'] = gsK.predict(data)
 
 	gsX = xgboost.XGBRegressor(learning_rate = 0.1,
@@ -99,8 +99,7 @@ def hybrid_lstm():
 
 	df['XGB'] = gsX.predict(data)
 
-	df = df.reset_index()
-	df = df.loc[:,['XGB','Knn','Linear','SMP','Date']]
+	df = df.loc[:,['XGB','Knn','Linear','SMP']]
 
 	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
@@ -115,12 +114,12 @@ def save_infernce():
 	try:
 		db = DB()
 		df = pd.DataFrame()
-		df['Linear'] = db.get_data('*','Linear').set_index('Date')['Inference'].dropna()
-		df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna()
-		df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna()
-		df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna()
-		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm').set_index('Date')['Inference'].dropna()
-		db.save_df_to_db(df.reset_index(),'infernce')
+		df['Linear'] = db.get_data('*','Linear')['Inference'].dropna()
+		df['Knn'] = db.get_data('*','Knn')['Inference'].dropna()
+		df['XgB'] = db.get_data('*','XgB')['Inference'].dropna()
+		df['Lstm'] = db.get_data('*','Lstm')['Inference'].dropna()
+		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm')['Inference'].dropna()
+		db.save_df_to_db(df,'infernce')
 	except:
 		return 'No Prediction Possible'
 		
@@ -139,7 +138,7 @@ threading.Thread(target=hybrid_lstm).start()
 # infe = pd.DataFrame(jsonData).set_index("Date")
 
 # db =DB()
-# df = db.get_data('*','train_set').set_index('Date')[-len(infe):]
+# df = db.get_data('*',dataset).set_index('Date')[-len(infe):]
 # infe = db.get_data('*','infernce').set_index('Date')[-len(infe):]
 
 
