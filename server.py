@@ -126,11 +126,11 @@ def save_infernce():
 
 
 save_infernce()
-update()
-threading.Thread(target=linear).start()
-threading.Thread(target=Knn).start()
-threading.Thread(target=xgb).start()
-threading.Thread(target=Lstm).start()
+# update()
+# threading.Thread(target=linear).start()
+# threading.Thread(target=Knn).start()
+# threading.Thread(target=xgb).start()
+# threading.Thread(target=Lstm).start()
 threading.Thread(target=hybrid_lstm).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')

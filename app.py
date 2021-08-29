@@ -3,19 +3,23 @@ from flask import render_template
 
 from utils.database_interface import DB
 from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter,get_candlesticks
-from datetime import date
+from datetime import date, timedelta
 import pandas as pd
 import json
+from pytz import timezone
+
+
+localTz = timezone('CET')
 
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 today = pd.to_datetime(date.today())
+week = str(localTz.localize(today - timedelta(weeks=1)))
 models = ['Linear','KnnR','XgB','Lstm','Hybrid_Lstm']
-
+dataset = 'requirements'
 def page(name):
 	db = DB()
 	df = db.get_data('*',name)
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce')[name]
+	df['Previous Prediction'] = db.get_data('*','infernce')[name]
 
 	metrics = get_metrics(name,db)
 
@@ -27,13 +31,13 @@ def page(name):
 @app.route('/')
 def index():
 	db = DB()
-	df = db.get_data('*', 'dataset')[-(7*24):].set_index('Date')
+	df = db.get_data('*', dataset,f'"index" > "{week}"')
 	return render_template('home.jinja',title = 'Train Data For The Past 7 Days',df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP))
 
 @app.route('/Correlation')
 def corrolations():
 	db = DB()
-	df = db.get_data('*', 'dataset')[-(7*24):].set_index('SMP')
+	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP')
 	df = df.iloc[:,df.columns!='Date'].dropna()
 	return render_template('correlation.jinja',title = 'Correlation For The Past 7 Days',df=df,get_json = get_json_for_fig_scatter)
 
@@ -55,8 +59,7 @@ def xgB():
 def lstm():
 	db = DB()
 	df = db.get_data('*','Lstm')
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce')['Lstm']
+	df['Previous Prediction'] = db.get_data('*','infernce')['Lstm']
 
 	hist = db.get_data('*','hist_lstm')
 
@@ -70,8 +73,7 @@ def lstm():
 def hybrid_lstm():
 	db = DB()
 	df = db.get_data('*','Hybrid_Lstm')
-	if not 'Inference' in df.columns:
-		df['Previous Prediction'] = db.get_data('*','infernce')['Hybrid_Lstm']
+	df['Previous Prediction'] = db.get_data('*','infernce')['Hybrid_Lstm']
 	hist = db.get_data('*','hist_Hybrid_Lstm')
 	
 	metrics = get_metrics('Hybrid_Lstm',db)

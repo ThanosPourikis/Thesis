@@ -55,7 +55,6 @@ class LstmMVInput:
 		self.learning_rate = learning_rate
 		self.name = name
 		self.model = model
-		self.db = DB()
 
 
 	def train(self):
@@ -141,8 +140,9 @@ class LstmMVInput:
 		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
 
 	def get_results(self,test = None):
-		if test ==None:
+		if test==None:
 			test = self.test
+			
 		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
 		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
 		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
