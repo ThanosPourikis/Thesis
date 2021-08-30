@@ -16,3 +16,4 @@ units/
 *\.log
 tet.txt
 /metrics
+test.py

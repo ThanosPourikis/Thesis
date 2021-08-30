@@ -86,13 +86,13 @@ def hybrid_lstm():
 def prices_api():
 	try:
 		db = DB()
-		df = {}
-		df['Linear'] = db.get_data('*','linear')['Inference'].dropna().to_list()
-		df['Knn'] = db.get_data('*','Knn')['Inference'].dropna().to_list()
-		df['XgB'] = db.get_data('*','XgB')['Inference'].dropna().to_list()
-		df['Lstm'] = db.get_data('*','Lstm')['Inference'].dropna().to_list()
-		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm')['Inference'].dropna().to_list()
-		return json.dumps(df)
+		df = pd.DataFrame()
+		df['Linear'] = db.get_data('"index","Inference"','linear').dropna()
+		df['Knn'] = db.get_data('"index","Inference"','Knn').dropna()
+		df['XgB'] = db.get_data('"index","Inference"','XgB').dropna()
+		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
+		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
+		return df.reset_index(drop=True).to_json()
 	except:
 		return 'No Prediction Possible'
 @app.route('/metrics_api/<algo>')

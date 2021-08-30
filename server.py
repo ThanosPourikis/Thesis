@@ -114,11 +114,13 @@ def save_infernce():
 	try:
 		db = DB()
 		df = pd.DataFrame()
-		df['Linear'] = db.get_data('*','Linear')['Inference'].dropna()
-		df['Knn'] = db.get_data('*','Knn')['Inference'].dropna()
-		df['XgB'] = db.get_data('*','XgB')['Inference'].dropna()
-		df['Lstm'] = db.get_data('*','Lstm')['Inference'].dropna()
-		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm')['Inference'].dropna()
+		df['Linear'] = db.get_data('"index","Inference"','linear').dropna()
+		df['Knn'] = db.get_data('"index","Inference"','Knn').dropna()
+		df['XgB'] = db.get_data('"index","Inference"','XgB').dropna()
+		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
+		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
+		df = pd.concat([db.get_data('*','infernce'),df])
+		df = df.reset_index().drop_duplicates(subset='index').set_index('index')
 		db.save_df_to_db(df,'infernce')
 	except:
 		return 'No Prediction Possible'
