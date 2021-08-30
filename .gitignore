@@ -15,3 +15,4 @@ test.json
 units/
 *\.log
 tet.txt
+/metrics

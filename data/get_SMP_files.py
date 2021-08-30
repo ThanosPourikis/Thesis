@@ -32,7 +32,7 @@ def get_SMP_files():
 			zip_file.extractall(folder_path)
 
 	
-
+	flag = False
 	index = 1
 	while(True):
 		url=f'https://www.enexgroup.gr/el/web/guest/markets-publications-el-day-ahead-market?p_p_id=com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_delta=7&p_r_p_resetCur=false&_com_liferay_asset_publisher_web_portlet_AssetPublisherPortlet_INSTANCE_9CZslwWTpeD2_cur={index}'
@@ -46,13 +46,14 @@ def get_SMP_files():
 			file_path = folder_path + i
 			if os.path.exists(file_path):
 				print(f'File {file_path} found')
+				flag = True
 			else:
 				url = f'https://www.enexgroup.gr/el/c/document_library/get_file?uuid{j}'
 				x = requests.get(url).content
 				print(f'Downloading File ')
 				with open(file_path ,'wb') as xlsx:
 					xlsx.write(x)
-		if not names:
+		if not names or flag:
 			break
 		index += 1
 	files = [f for f in listdir(folder_path)]

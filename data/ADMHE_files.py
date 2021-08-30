@@ -3,23 +3,27 @@ import requests
 import os
 import pandas as pd
 
+
 dt = datetime.now() + timedelta(days=1)
 
-def get_excel_data(folder_path,filetype):
+def get_excel_data(folder_path,filetype,start_date):
 	df = {}
 
 	yyyy = dt.year
 	mm = dt.month
 	dd = dt.day
-	
-
+	start_date = datetime.fromisoformat(start_date)
+	start_date = start_date
+	syyyy = start_date.year
+	smm = start_date.month
+	sdd = start_date.day
 	if os.path.exists(folder_path):
 		print('Directory already exists')
 	else:
 		print('Creating Directory')
 		os.mkdir(folder_path)
 
-	url = f'https://www.admie.gr/getOperationMarketFilewRange?dateStart=2020-11-01&dateEnd={yyyy}-{mm}-{dd}&FileCategory={filetype}'
+	url = f'https://www.admie.gr/getOperationMarketFilewRange?dateStart={syyyy}-{smm}-{sdd}&dateEnd={yyyy}-{mm}-{dd}&FileCategory={filetype}'
 
 	name = ''
 	data = requests.get(url)

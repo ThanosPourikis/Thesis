@@ -66,5 +66,4 @@ def get_isp_data(df):
 			export_df = export_df.append(pairs)
 
 	export_df = export_df.sort_index()
-	export_df.to_csv('datasets/requirements.csv')
 	return export_df

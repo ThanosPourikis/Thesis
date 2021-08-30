@@ -87,12 +87,11 @@ def prices_api():
 	try:
 		db = DB()
 		df = {}
-		df['Date'] = db.get_data('*','linear')[-24:]['Date'].astype(str).to_list()
-		df['Linear'] = db.get_data('*','linear').set_index('Date')['Inference'].dropna().to_list()
-		df['Knn'] = db.get_data('*','Knn').set_index('Date')['Inference'].dropna().to_list()
-		df['XgB'] = db.get_data('*','XgB').set_index('Date')['Inference'].dropna().to_list()
-		df['Lstm'] = db.get_data('*','Lstm').set_index('Date')['Inference'].dropna().to_list()
-		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm').set_index('Date')['Inference'].dropna().to_list()
+		df['Linear'] = db.get_data('*','linear')['Inference'].dropna().to_list()
+		df['Knn'] = db.get_data('*','Knn')['Inference'].dropna().to_list()
+		df['XgB'] = db.get_data('*','XgB')['Inference'].dropna().to_list()
+		df['Lstm'] = db.get_data('*','Lstm')['Inference'].dropna().to_list()
+		df['Hybrid_Lstm'] = db.get_data('*','Hybrid_Lstm')['Inference'].dropna().to_list()
 		return json.dumps(df)
 	except:
 		return 'No Prediction Possible'

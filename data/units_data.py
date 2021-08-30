@@ -26,7 +26,6 @@ def get_unit_data(df):
 	export= export.sort_index()
 	export['Date'] = export.index
 	export = export.set_index('Date')
-	export.to_csv('datasets/units.csv')
 	return export
 
 		
