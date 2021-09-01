@@ -122,7 +122,7 @@ class LstmMVInput:
 			if self.error_val[-1] <= self.error_val.min() :
 				self.model = copy.deepcopy(model)
 
-			logging.info(f"{self.name} Epoch {len(self.error_val)} {self.loss_function} \t Training\t{self.error_train[-1]}\t Validation\t{self.error_val[-1]}")
+			logging.info(f"{self.name}\t Time {time.time() - start_time}\t Epoch {len(self.error_val)} {self.loss_function} \t Training\t{self.error_train[-1]}\t Validation\t{self.error_val[-1]}")
 			
 			if (len(self.error_val) - self.error_val.argmin()) > self.num_epochs:
 				break
@@ -136,7 +136,7 @@ class LstmMVInput:
 		self.y_train_prediction = scalers['labels_t'].inverse_transform(y_train_pred_best)
 		self.y_train_denorm = scalers['labels_t'].inverse_transform(y_train) 
 
-		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
+		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best.reshape(1, -1))
 		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
 
 	def get_results(self,test = None):

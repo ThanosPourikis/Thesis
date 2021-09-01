@@ -32,8 +32,8 @@ def check_data_integrity(df):
 
 def save_metrics(metrics,model,db):
 	try:
-		metrics = pd.concat([metrics,db.get_data('*',f'metrics_{model}')])
-		metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
+		# metrics = pd.concat([metrics,db.get_data('*',f'metrics_{model}')])
+		# metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
 		db.save_df_to_db(metrics,f'metrics_{model}')
 	except:
 		metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
