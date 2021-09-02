@@ -2,12 +2,13 @@ import sqlalchemy as sq
 import pandas as pd
 from pytz import timezone
 from datetime import datetime,timedelta
-
+import config
 localTz = timezone('CET')
-
+sqlite = 'sqlite:///database.db'
+mysql = f'mysql+mysqldb://{config.USERNAME}:{config.PASSWORD}@{config.HOSTNAME}/{config.DATABASENAME}'
 class DB:
 	def __init__(self):
-		self.engine = sq.create_engine('sqlite:///database.db')
+		self.engine = sq.create_engine(sqlite)
 		self.connection = self.engine.connect()
 	def save_df_to_db(self, dataframe, df_name):
 		try:

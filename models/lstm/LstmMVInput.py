@@ -136,7 +136,7 @@ class LstmMVInput:
 		self.y_train_prediction = scalers['labels_t'].inverse_transform(y_train_pred_best)
 		self.y_train_denorm = scalers['labels_t'].inverse_transform(y_train) 
 
-		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best.reshape(1, -1))
+		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
 		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
 
 	def get_results(self,test = None):
