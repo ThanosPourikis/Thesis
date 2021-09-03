@@ -1,3 +1,4 @@
+from os import name
 import flask
 from flask import render_template
 
@@ -16,17 +17,7 @@ today = pd.to_datetime(date.today())
 week = str(localTz.localize(today - timedelta(weeks=1)))
 models = ['Linear','KnnR','XgB','Lstm','Hybrid_Lstm']
 dataset = 'requirements'
-def page(name):
-	db = DB()
-	df = db.get_data('*',name)
-	df['Previous Prediction'] = db.get_data('*','infernce')[name]
 
-	metrics = get_metrics(name,db)
-
-	return render_template('model.jinja', title = f'{name} Model Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics
-							)
 
 @app.route('/')
 def index():
@@ -37,30 +28,27 @@ def index():
 @app.route('/Correlation')
 def corrolations():
 	db = DB()
-	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP')
-	df = df.iloc[:,df.columns!='Date'].dropna()
+	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = 'Correlation For The Past 7 Days',df=df,get_json = get_json_for_fig_scatter)
 
-@app.route('/Linear')
-def linear_page():
-	return page('Linear')
+@app.route('/<name>')
+def page_for_ml_model(name):
+	db = DB()
+	df = db.get_data('*',name)
+	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
 
-@app.route('/Knn')
-def knn():
-	return page('Knn')
+	metrics = get_metrics(name,db)
 
-
-
-@app.route('/XgB')
-def xgB():
-	return page('XgB')
+	return render_template('model.jinja', title = f'{name} Model Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_scatter(df,df.columns),
+							metrics = metrics
+							)
 
 @app.route('/Lstm')
 def lstm():
 	db = DB()
 	df = db.get_data('*','Lstm')
-	df['Previous Prediction'] = db.get_data('*','infernce')['Lstm']
-
+	df['Previous Prediction'] = db.get_data('"index","Lstm"','infernce')
 	hist = db.get_data('*','hist_lstm')
 
 	metrics = get_metrics('Lstm',db)
@@ -73,7 +61,7 @@ def lstm():
 def hybrid_lstm():
 	db = DB()
 	df = db.get_data('*','Hybrid_Lstm')
-	df['Previous Prediction'] = db.get_data('*','infernce')['Hybrid_Lstm']
+	df['Previous Prediction'] = db.get_data('"index","Hybrid_Lstm"','infernce')
 	hist = db.get_data('*','hist_Hybrid_Lstm')
 	
 	metrics = get_metrics('Hybrid_Lstm',db)
