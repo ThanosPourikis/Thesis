@@ -18,55 +18,32 @@ from sklearn.neighbors import KNeighborsRegressor
 import xgboost
 import requests
 
-
-logging.basicConfig(filename='log.log',level=logging.DEBUG)
-dataset = 'requirements_units'
-def linear():
-	db =DB()
-	df = db.get_data('*',dataset)
-	linear = Linear(data=df)
+def train_model(model,model_name,dataset_name):
+	db_in =DB(database_in)
+	df = db_in.get_data('*',dataset_name)
+	linear = model(data=df)
 	linear.train()
 	prediction,metrics = linear.get_results()
-	db.save_df_to_db(prediction,'Linear')
-	utils.save_metrics(metrics,'Linear',db)
+	db_out = DB(dataset_name)
+	db_out.save_df_to_db(prediction,model_name)
+	utils.save_metrics(metrics,model_name,db_out)
 
-
-
-def Knn():
-	db =DB()
-	df = db.get_data('*',dataset)
-	knn = KnnModel(data=df)
-	knn.train()
-	prediction,metrics = knn.get_results()
-	db.save_df_to_db(prediction,'knn')
-
-	utils.save_metrics(metrics,'knn',db)
-
-def xgb():
-	db =DB()
-	df = db.get_data('*',dataset)
-	xgb = XgbModel(data=df)
-	xgb.train()
-	prediction,metrics = xgb.get_results()
-	db.save_df_to_db(prediction,'xgb')
-
-	utils.save_metrics(metrics,'xgb',db)
-
-def Lstm():
-	db =DB()
-	df = db.get_data('*',dataset)
+def Lstm(dataset_name):
+	db_in =DB(database_in)
+	df = db_in.get_data('*',dataset_name)
 	lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Vanilla')
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
-	db.save_df_to_db(hist,'hist_lstm')
+	db_out = DB(dataset_name)
 
-	db.save_df_to_db(prediction,'lstm')
+	db_out.save_df_to_db(hist,'hist_lstm')
+	db_out.save_df_to_db(prediction,'lstm')
 	metrics['best_epoch'] = best_epoch
-	utils.save_metrics(metrics,'lstm',db)
+	utils.save_metrics(metrics,'lstm',db_out)
 
-def hybrid_lstm():
-	db =DB()
-	df = db.get_data('*',dataset)
+def hybrid_lstm(dataset_name):
+	db_in =DB(database_in)
+	df = db_in.get_data('*',dataset_name)
 
 	if df.isnull().values.any():
 		data = df.copy()
@@ -104,42 +81,50 @@ def hybrid_lstm():
 	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=150,batch_size=32,sequence_length=24,name = 'Hybrid')
 	hybrid_lstm.train()
 	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
-	db.save_df_to_db(hist,'hist_Hybrid_Lstm')
+	db_out = DB(dataset_name)
 
-	db.save_df_to_db(prediction,'Hybrid_Lstm')
+	db_out.save_df_to_db(hist,'hist_Hybrid_Lstm')
+
+	db_out.save_df_to_db(prediction,'Hybrid_Lstm')
 	metrics['best_epoch'] = best_epoch
-	utils.save_metrics(metrics,'Hybrid_Lstm',db)
+	utils.save_metrics(metrics,'Hybrid_Lstm',db_out)
 
-def save_infernce():
+def save_infernce(dataset_name):
 	try:
-		db = DB()
+		db = DB(dataset_name)
 		df = pd.DataFrame()
-		df['Linear'] = db.get_data('"index","Inference"','linear').dropna()
-		df['Knn'] = db.get_data('"index","Inference"','Knn').dropna()
-		df['XgB'] = db.get_data('"index","Inference"','XgB').dropna()
+		df['Linear'] = db.get_data('"index","Inference"','Linear').dropna()
+		df['Knn'] = db.get_data('"index","Inference"','KnnModel').dropna()
+		df['XgB'] = db.get_data('"index","Inference"','XgbModel').dropna()
 		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
 		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
-		df = pd.concat([db.get_data('*','infernce'),df])
-		df = df.reset_index().drop_duplicates(subset='index').set_index('index')
+		try:
+			df = pd.concat([db.get_data('*','infernce'),df])
+			df = df.reset_index().drop_duplicates(subset='index').set_index('index')
+		except:
+			pass
 		db.save_df_to_db(df,'infernce')
 	except:
 		return 'No Prediction Possible'
 		
+logging.basicConfig(filename='log.log',level=logging.DEBUG)
+datasets = ['requirements','requirements_units','requirements_units_weather']
+database_in = 'dataset'
 
-
-save_infernce()
 update()
-threading.Thread(target=linear).start()
-threading.Thread(target=Knn).start()
-threading.Thread(target=xgb).start()
-threading.Thread(target=Lstm).start()
-threading.Thread(target=hybrid_lstm).start()
+for dataset_name in datasets:
+	save_infernce(dataset_name)
+	threading.Thread(target=train_model,args = (Linear,'Linear',dataset_name,)).start()
+	threading.Thread(target=train_model,args = (KnnModel,'KnnModel',dataset_name,)).start()
+	threading.Thread(target=train_model,args = (XgbModel,'XgbModel',dataset_name,)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,)).start()
+	threading.Thread(target=hybrid_lstm,args = (dataset_name,)).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
 # infe = pd.DataFrame(jsonData).set_index("Date")
 
-# db =DB()
+# db =DB(database)
 # df = db.get_data('*',dataset).set_index('Date')[-len(infe):]
 # infe = db.get_data('*','infernce').set_index('Date')[-len(infe):]
 

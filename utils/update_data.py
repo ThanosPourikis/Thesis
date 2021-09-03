@@ -8,17 +8,24 @@ from data.get_weather_data import download_weather_data, get_weather_data,get_we
 import config
 
 def update():
-	db = DB()
-	start_date = db.get_data('MAX("index")','isp1').values[0,0]
-	req = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
-	req = pd.concat([db.get_data('*','isp1'),req])
+	db = DB('dataset')
+	try:
+		start_date = db.get_data('MAX("index")','isp1').values[0,0]
+		req = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
+		req = pd.concat([db.get_data('*','isp1'),req])
+	except:
+		start_date = '2020-11-01'
+		req = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
+
 	req.to_csv('datasets/requirements.csv')
 	db.save_df_to_db(dataframe=req.copy(),df_name='isp1')
-
-	start_date = db.get_data('MAX("index")','units').values[0,0]
-	units = get_unit_data(get_excel_data(folder_path=config.UNITS['folder_path'],filetype=config.UNITS['filetype'],start_date = start_date))
-
-	units = pd.concat([db.get_data('*','units'),units]).fillna(0)
+	try:
+		start_date = db.get_data('MAX("index")','units').values[0,0]
+		units = get_unit_data(get_excel_data(folder_path=config.UNITS['folder_path'],filetype=config.UNITS['filetype'],start_date = start_date))
+		units = pd.concat([db.get_data('*','units'),units]).fillna(0)
+	except:
+		start_date = '2020-11-01'
+		units = get_unit_data(get_excel_data(folder_path=config.UNITS['folder_path'],filetype=config.UNITS['filetype'],start_date = start_date))
 
 	units.to_csv('datasets/units.csv')
 	db.save_df_to_db(dataframe=units.copy(),df_name='units')
@@ -39,3 +46,10 @@ def update():
 	db.save_df_to_db(dataframe=dataset,df_name='requirements_units')
 	dataset = req.join(units).join(weather).join(Smp)
 	db.save_df_to_db(dataframe=dataset,df_name='requirements_units_weather')
+
+	db = DB('requirements')
+	db.save_df_to_db(dataframe=req.join(Smp)[-7*24:],df_name='requirements')
+	db = DB('requirements_units')
+	db.save_df_to_db(dataframe=req.join(Smp)[-7*24:],df_name='requirements_units')
+	db = DB('requirements_units_weather')
+	db.save_df_to_db(dataframe=req.join(weather).join(Smp)[-7*24:],df_name='requirements_units_weather')

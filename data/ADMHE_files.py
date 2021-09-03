@@ -13,7 +13,6 @@ def get_excel_data(folder_path,filetype,start_date):
 	mm = dt.month
 	dd = dt.day
 	start_date = datetime.fromisoformat(start_date)
-	start_date = start_date
 	syyyy = start_date.year
 	smm = start_date.month
 	sdd = start_date.day
