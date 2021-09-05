@@ -1,6 +1,7 @@
 from os import name
 import flask
 from flask import render_template
+from werkzeug.utils import redirect
 
 from utils.database_interface import DB
 from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter,get_candlesticks
@@ -83,6 +84,11 @@ def prices_api(dataset):
 		return df.reset_index(drop=True).to_json()
 	except:
 		return 'No Prediction Possible'
+
+@app.route('/')
+def home():
+	return redirect('requirements/Linear')
+
 @app.route('/<dataset>/metrics_api/<algo>')
 def metrics_api(dataset,algo):
 	

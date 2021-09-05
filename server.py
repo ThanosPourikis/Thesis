@@ -94,8 +94,8 @@ def save_infernce(dataset_name):
 		db = DB(dataset_name)
 		df = pd.DataFrame()
 		df['Linear'] = db.get_data('"index","Inference"','Linear').dropna()
-		df['Knn'] = db.get_data('"index","Inference"','KnnModel').dropna()
-		df['XgB'] = db.get_data('"index","Inference"','XgbModel').dropna()
+		df['KnnModel'] = db.get_data('"index","Inference"','KnnModel').dropna()
+		df['XgbModel'] = db.get_data('"index","Inference"','XgbModel').dropna()
 		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
 		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
 		try:
@@ -108,17 +108,17 @@ def save_infernce(dataset_name):
 		return 'No Prediction Possible'
 		
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
-datasets = ['requirements','requirements_units','requirements_units_weather']
+datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 database_in = 'dataset'
 
-update()
+# update()
 for dataset_name in datasets:
 	save_infernce(dataset_name)
-	threading.Thread(target=train_model,args = (Linear,'Linear',dataset_name,)).start()
-	threading.Thread(target=train_model,args = (KnnModel,'KnnModel',dataset_name,)).start()
-	threading.Thread(target=train_model,args = (XgbModel,'XgbModel',dataset_name,)).start()
-	threading.Thread(target=Lstm,args = (dataset_name,)).start()
-	threading.Thread(target=hybrid_lstm,args = (dataset_name,)).start()
+	# threading.Thread(target=train_model,args = (Linear,'Linear',dataset_name,)).start()
+	# threading.Thread(target=train_model,args = (KnnModel,'KnnModel',dataset_name,)).start()
+	# threading.Thread(target=train_model,args = (XgbModel,'XgbModel',dataset_name,)).start()
+	# threading.Thread(target=Lstm,args = (dataset_name,)).start()
+	# threading.Thread(target=hybrid_lstm,args = (dataset_name,)).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
