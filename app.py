@@ -71,23 +71,19 @@ def hybrid_lstm(dataset):
 							metrics = metrics,
 							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
 
-@app.route('/<dataset>/prices_api')
+@app.route('/prices_api/<dataset>')
 def prices_api(dataset):
 	try:
 		db = DB(dataset)
 		df = pd.DataFrame()
 		df['Linear'] = db.get_data('"index","Inference"','Linear').dropna()
-		df['Knn'] = db.get_data('"index","Inference"','KnnModel').dropna()
-		df['XgB'] = db.get_data('"index","Inference"','XgbModel').dropna()
+		df['KnnModel'] = db.get_data('"index","Inference"','KnnModel').dropna()
+		df['XgbModel'] = db.get_data('"index","Inference"','XgbModel').dropna()
 		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
 		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
 		return df.reset_index(drop=True).to_json()
 	except:
 		return 'No Prediction Possible'
-
-@app.route('/')
-def home():
-	return redirect('requirements/Linear')
 
 @app.route('/<dataset>/metrics_api/<algo>')
 def metrics_api(dataset,algo):
@@ -97,6 +93,29 @@ def metrics_api(dataset,algo):
 		return get_metrics(algo,db).to_json()
 	except:
 		return "WRONG"
+
+@app.route('/Api/<route>')
+def api(route):
+	datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
+	models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid_Lstm']
+
+	if route =='datasets':
+		return pd.DataFrame(datasets).to_json()
+	elif route == 'models':
+		return pd.DataFrame(models).to_json()
+	elif route == 'docs':
+		return render_template('api.jinja',datasets= datasets,models = models)
+
+@app.route('/')
+def home():
+	return redirect('requirements/Linear')
+
+@app.route('/Api')
+def api_redict():
+	return redirect('Api/docs')
+
+
+
 if __name__ == '__main__':
 	
 	app.run(host="localhost", port=8000, debug=True)
