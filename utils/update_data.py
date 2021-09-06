@@ -19,10 +19,11 @@ def update():
 
 	req.to_csv('datasets/requirements.csv')
 	db.save_df_to_db(dataframe=req.copy(),df_name='isp1')
+
 	try:
 		start_date = db.get_data('MAX("index")','units').values[0,0]
 		units = get_unit_data(get_excel_data(folder_path=config.UNITS['folder_path'],filetype=config.UNITS['filetype'],start_date = start_date))
-		units = pd.concat([db.get_data('*','units'),units]).fillna(0)
+		units = pd.concat([db.get_data('*','units')[units.columns],units]).fillna(0)
 	except:
 		start_date = '2020-11-01'
 		units = get_unit_data(get_excel_data(folder_path=config.UNITS['folder_path'],filetype=config.UNITS['filetype'],start_date = start_date))
