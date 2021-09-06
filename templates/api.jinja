@@ -13,11 +13,11 @@
 	{% for i in datasets %}
 			<div class="card">
 			<div class="card-body">
-					<a href="/{{i}}/metrics_api/all" class="card-link"><h4 class="card-title">{{i}}</h4></a>
+					<a href="/metrics_api/{{i}}/all" class="card-link"><h4 class="card-title">{{i}}</h4></a>
 			</div>
 			<div class="card-body">
 					{% for j in models %}
-						<a href="/{{i}}/metrics_api/{{j}}" class="card-link">{{j}}</a>
+						<a href="/metrics_api/{{i}}/{{j}}" class="card-link">{{j}}</a>
 					{% endfor %}
 				</div>
 			</div>

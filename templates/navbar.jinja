@@ -1,18 +1,18 @@
 <nav class="nav justify-content-center fixed-top navbar-dark bg-dark">
-	<a class="nav-link" href="/{{dataset}}/Dataset">Original Data</a>
-	<a class="nav-link" href="/{{dataset}}/Correlation">Correlation</a>
-	<a class="nav-link" href="/{{dataset}}/Linear">Linear</a>
-	<a class="nav-link" href="/{{dataset}}/KnnModel">Knn</a>
-	<a class="nav-link" href="/{{dataset}}/XgbModel">XgBoost</a>
-	<a class="nav-link" href="/{{dataset}}/Lstm">Lstm</a>
-	<a class="nav-link" href="/{{dataset}}/Hybrid_Lstm">Hybrid Lstm</a>
+	<a class="nav-link" href="/Dataset/{{dataset}}">Original Data</a>
+	<a class="nav-link" href="/Correlation/{{dataset}}">Correlation</a>
+	<a class="nav-link" href="/Linear/{{dataset}}">Linear</a>
+	<a class="nav-link" href="/KnnModel/{{dataset}}">Knn</a>
+	<a class="nav-link" href="/XgbModel/{{dataset}}">XgBoost</a>
+	<a class="nav-link" href="/Lstm/{{dataset}}">Lstm</a>
+	<a class="nav-link" href="/Hybrid_Lstm/{{dataset}}">Hybrid Lstm</a>
 <div class="form-group">
   <select class="form-control bg-dark text-primary" name="" id="" onChange="window.location.href=this.value">
 	<option value="">Pick a Dataset</option>
-	<option value="/requirements/{{ request.path.split('/')[-1]}}">requirements</option>
-	<option value="/requirements_units/{{ request.path.split('/')[-1]}}">requirements_units</option>
-	<option value="/requirements_weather/{{ request.path.split('/')[-1]}}">requirements_weather</option>
-	<option value="/requirements_units_weather/{{ request.path.split('/')[-1]}}">requirements_units_weather</option>
+	<option value="/{{ request.path.split('/')[-2]}}/requirements">requirements</option>
+	<option value="/{{ request.path.split('/')[-2]}}/requirements_units">requirements_units</option>
+	<option value="/{{ request.path.split('/')[-2]}}/requirements_weather">requirements_weather</option>
+	<option value="/{{ request.path.split('/')[-2]}}/requirements_units_weather">requirements_units_weather</option>
 </select>
 </div>
 </nav>
