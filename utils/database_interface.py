@@ -8,7 +8,7 @@ sqlite = 'sqlite:///{}.db'
 # mysql = f'mysql+mysqldb://{config.USERNAME}:{config.PASSWORD}@{config.HOSTNAME}/{config.DATABASENAME}'
 class DB:
 	def __init__(self,database):
-		self.engine = sq.create_engine(sqlite.format(database))
+		self.engine = sq.create_engine(sqlite.format(database),)
 		self.connection = self.engine.connect()
 	def save_df_to_db(self, dataframe, df_name):
 		try:

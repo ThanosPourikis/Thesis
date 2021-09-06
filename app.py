@@ -108,7 +108,7 @@ def metrics_api(dataset,model):
 		if model == 'all':
 			df = {}
 			for model in models:
-				df[model] = get_metrics(model,db).to_dict()
+				df[model] = get_metrics(model,db).loc[:,['Train','Validation','Test']].to_dict()
 			return df
 		else:
 			return get_metrics(model,db).to_json()
