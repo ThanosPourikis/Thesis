@@ -5,7 +5,7 @@
 			</div>
 			<div class="card-body">
 				{% for i in datasets %}
-					<a href="prices_api/{{i}}" class="card-link">{{i}}</a>
+					<a href="/prices_api/{{i}}" class="card-link">{{i}}</a>
 				{% endfor %}
 				</div>
 			</div>
@@ -17,7 +17,7 @@
 			</div>
 			<div class="card-body">
 					{% for j in models %}
-						<a href="{{i}}/metrics_api/{{j}}" class="card-link">{{j}}</a>
+						<a href="/{{i}}/metrics_api/{{j}}" class="card-link">{{j}}</a>
 					{% endfor %}
 				</div>
 			</div>
