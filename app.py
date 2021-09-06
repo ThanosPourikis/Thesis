@@ -15,6 +15,9 @@ app = flask.Flask(__name__, static_url_path='', static_folder='static', template
 today = pd.to_datetime(date.today())
 week = str(localTz.localize(today - timedelta(weeks=1)))
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
+datasets_dict = {'requirements':'requirements','requirements_units':'requirements_units',
+'requirements_weather':'requirements_weather','requirements_units_weather':'requirements_units_weather'}
+
 models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid_Lstm']
 # dataset = 'requirements'
 # database = 'requirements_units'
@@ -32,29 +35,29 @@ def api(route):
 
 @app.route('/')
 def home():
-	return redirect('requirements/Linear')
+	return redirect('requirements/Dataset')
 
 @app.route('/Api')
 def api_redict():
 	return redirect('Api/docs')
 
-@app.route('/<dataset>/Dataset')
+@app.route('/Dataset/<dataset>')
 def index(dataset):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset)
 	return render_template('home.jinja',title = 'Train Data For The Past 7 Days',
 	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),dataset = dataset)
 
-@app.route('/<dataset>/Correlation')
+@app.route('/Correlation/<dataset>')
 def corrolations(dataset):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = 'Correlation For The Past 7 Days',
 	df=df,get_json = get_json_for_fig_scatter,dataset = dataset)
 
-@app.route('/<dataset>/<name>')
+@app.route('/<name>/<dataset>')
 def page_for_ml_model(dataset,name):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	df = db.get_data('*',name)
 	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
 
@@ -64,9 +67,9 @@ def page_for_ml_model(dataset,name):
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,dataset = dataset)
 
-@app.route('/<dataset>/Lstm')
+@app.route('/Lstm/<dataset>')
 def lstm(dataset):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	df = db.get_data('*','Lstm')
 	df['Previous Prediction'] = db.get_data('"index","Lstm"','infernce')
 	hist = db.get_data('*','hist_lstm')
@@ -77,9 +80,9 @@ def lstm(dataset):
 							metrics = metrics,
 							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
 
-@app.route('/<dataset>/Hybrid_Lstm')
+@app.route('/Hybrid_Lstm/<dataset>')
 def hybrid_lstm(dataset):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	df = db.get_data('*','Hybrid_Lstm')
 	df['Previous Prediction'] = db.get_data('"index","Hybrid_Lstm"','infernce')
 	hist = db.get_data('*','hist_Hybrid_Lstm')
@@ -93,7 +96,7 @@ def hybrid_lstm(dataset):
 @app.route('/prices_api/<dataset>')
 def prices_api(dataset):
 	try:
-		db = DB(dataset)
+		db = DB(datasets_dict[dataset])
 		df = pd.DataFrame()
 		for model in models:
 			df[model] = db.get_data('"index","Inference"',model).dropna()
@@ -101,9 +104,9 @@ def prices_api(dataset):
 	except:
 		return 'No Prediction Possible'
 
-@app.route('/<dataset>/metrics_api/<model>')
+@app.route('/metrics_api/<dataset>/<model>')
 def metrics_api(dataset,model):
-	db = DB(dataset)
+	db = DB(datasets_dict[dataset])
 	try : 
 		if model == 'all':
 			df = {}
