@@ -1,7 +1,7 @@
 	<h1>Price API</h1>
 			<div class="card">
 			<div class="card-body">
-				<h4 class="card-title">Datasets</h4>
+				<a href="/Api/datasets" class="card-link"><h4 class="card-title">Datasets</h4></a>
 			</div>
 			<div class="card-body">
 				{% for i in datasets %}
@@ -13,7 +13,7 @@
 	{% for i in datasets %}
 			<div class="card">
 			<div class="card-body">
-				<h4 class="card-title">{{i}}</h4>
+					<a href="/{{i}}/metrics_api/all" class="card-link"><h4 class="card-title">{{i}}</h4></a>
 			</div>
 			<div class="card-body">
 					{% for j in models %}

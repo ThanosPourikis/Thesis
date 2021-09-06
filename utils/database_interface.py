@@ -2,10 +2,10 @@ import sqlalchemy as sq
 import pandas as pd
 from pytz import timezone
 from datetime import datetime,timedelta
-import config
+# import config
 localTz = timezone('CET')
 sqlite = 'sqlite:///{}.db'
-mysql = f'mysql+mysqldb://{config.USERNAME}:{config.PASSWORD}@{config.HOSTNAME}/{config.DATABASENAME}'
+# mysql = f'mysql+mysqldb://{config.USERNAME}:{config.PASSWORD}@{config.HOSTNAME}/{config.DATABASENAME}'
 class DB:
 	def __init__(self,database):
 		self.engine = sq.create_engine(sqlite.format(database))

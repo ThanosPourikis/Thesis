@@ -1,4 +1,3 @@
-from os import name
 import flask
 from flask import render_template
 from werkzeug.utils import redirect
@@ -15,9 +14,29 @@ localTz = timezone('CET')
 app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 today = pd.to_datetime(date.today())
 week = str(localTz.localize(today - timedelta(weeks=1)))
-models = ['Linear','KnnR','XgB','Lstm','Hybrid_Lstm']
+datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
+models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid_Lstm']
 # dataset = 'requirements'
 # database = 'requirements_units'
+
+@app.route('/Api/<route>')
+def api(route):
+
+
+	if route =='datasets':
+		return pd.DataFrame(datasets).to_json()
+	elif route == 'models':
+		return pd.DataFrame(models).to_json()
+	elif route == 'docs':
+		return render_template('api.jinja',datasets= datasets,models = models)
+
+@app.route('/')
+def home():
+	return redirect('requirements/Linear')
+
+@app.route('/Api')
+def api_redict():
+	return redirect('Api/docs')
 
 @app.route('/<dataset>/Dataset')
 def index(dataset):
@@ -76,43 +95,27 @@ def prices_api(dataset):
 	try:
 		db = DB(dataset)
 		df = pd.DataFrame()
-		df['Linear'] = db.get_data('"index","Inference"','Linear').dropna()
-		df['KnnModel'] = db.get_data('"index","Inference"','KnnModel').dropna()
-		df['XgbModel'] = db.get_data('"index","Inference"','XgbModel').dropna()
-		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
-		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
+		for model in models:
+			df[model] = db.get_data('"index","Inference"',model).dropna()
 		return df.reset_index(drop=True).to_json()
 	except:
 		return 'No Prediction Possible'
 
-@app.route('/<dataset>/metrics_api/<algo>')
-def metrics_api(dataset,algo):
-	
+@app.route('/<dataset>/metrics_api/<model>')
+def metrics_api(dataset,model):
 	db = DB(dataset)
 	try : 
-		return get_metrics(algo,db).to_json()
+		if model == 'all':
+			df = {}
+			for model in models:
+				df[model] = get_metrics(model,db).to_dict()
+			return df
+		else:
+			return get_metrics(model,db).to_json()
 	except:
 		return "WRONG"
 
-@app.route('/Api/<route>')
-def api(route):
-	datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
-	models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid_Lstm']
 
-	if route =='datasets':
-		return pd.DataFrame(datasets).to_json()
-	elif route == 'models':
-		return pd.DataFrame(models).to_json()
-	elif route == 'docs':
-		return render_template('api.jinja',datasets= datasets,models = models)
-
-@app.route('/')
-def home():
-	return redirect('requirements/Linear')
-
-@app.route('/Api')
-def api_redict():
-	return redirect('Api/docs')
 
 
 
