@@ -5,7 +5,7 @@
 					<h3 class="card-title">{{i}}</h3>
 					<div  id='{{i}}'>
 						<script>
-							var graph = {{ get_json(df[i],i,df.index) | safe }};
+							var graph = {{ get_json(df[i],df.index,i) | safe }};
 							Plotly.plot('{{i}}', graph, {});
 						</script>
 					</div>
