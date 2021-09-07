@@ -35,7 +35,7 @@ def api(route):
 
 @app.route('/')
 def home():
-	return redirect('requirements/Dataset')
+	return redirect('Dataset/requirements/')
 
 @app.route('/Api')
 def api_redict():
