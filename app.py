@@ -35,7 +35,7 @@ def api(route):
 
 @app.route('/')
 def home():
-	return redirect('Dataset/requirements/')
+	return redirect('Dataset/requirements')
 
 @app.route('/Api')
 def api_redict():
@@ -45,14 +45,14 @@ def api_redict():
 def index(dataset):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset)
-	return render_template('home.jinja',title = 'Train Data For The Past 7 Days',
+	return render_template('home.jinja',title = f'Train Data For {dataset} Dataset For The Past 7 Days',
 	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),dataset = dataset)
 
 @app.route('/Correlation/<dataset>')
 def corrolations(dataset):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP').dropna()
-	return render_template('correlation.jinja',title = 'Correlation For The Past 7 Days',
+	return render_template('correlation.jinja',title = f'Correlation For {dataset} Dataset For The Past 7 Days',
 	df=df,get_json = get_json_for_fig_scatter,dataset = dataset)
 
 @app.route('/<name>/<dataset>')
@@ -63,7 +63,7 @@ def page_for_ml_model(dataset,name):
 
 	metrics = get_metrics(name,db)
 
-	return render_template('model.jinja', title = f'{name} Model Last 7days Prediction vs Actual Price And Inference',
+	return render_template('model.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,dataset = dataset)
 
@@ -75,7 +75,7 @@ def lstm(dataset):
 	hist = db.get_data('*','hist_lstm')
 
 	metrics = get_metrics('Lstm',db)
-	return render_template('lstm.jinja', title = 'Lstm Model Last 7days Prediction vs Actual Price And Inference',
+	return render_template('lstm.jinja', title = f'Lstm Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,
 							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
@@ -88,7 +88,7 @@ def hybrid_lstm(dataset):
 	hist = db.get_data('*','hist_Hybrid_Lstm')
 	
 	metrics = get_metrics('Hybrid_Lstm',db)
-	return render_template('lstm.jinja', title = 'Hybrid Lstm Model Last 7days Prediction vs Actual Price And Inference',
+	return render_template('lstm.jinja', title = f'Hybrid Lstm Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,
 							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
