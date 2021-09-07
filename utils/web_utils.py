@@ -21,7 +21,7 @@ def get_json_for_line_scatter(df,y,line = None):
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
 
-def get_json_for_fig_scatter(df,x,y):
+def get_json_for_fig_scatter(df,y,x):
 	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
