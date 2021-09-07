@@ -27,9 +27,9 @@ def api(route):
 
 
 	if route =='datasets':
-		return pd.DataFrame(datasets).to_json()
+		return pd.DataFrame(datasets)[0].to_json()
 	elif route == 'models':
-		return pd.DataFrame(models).to_json()
+		return pd.DataFrame(models)[0].to_json()
 	elif route == 'docs':
 		return render_template('api.jinja',datasets= datasets,models = models)
 
