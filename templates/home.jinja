@@ -3,18 +3,35 @@
 	<h1>{{title}}</h1>
 	<div class="row">
 		<div class="col-xs-1-12">
+			<div class="card">
+				<div class="card-body">
+					<h3 class="card-title">Candlesticks</h3>
+					<div  id='candlestick'>
+						<script>
+							var graph = {{ candlestick}};
+							Plotly.plot('candlestick', graph, {});
+						</script>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% if not heatmap == None %}
+			<div class="col-xs-1-12">
 				<div class="card">
 					<div class="card-body">
-						<h3 class="card-title">Candlesticks</h3>
-						<div  id='candlestick'>
+						<h3 class="card-title">Heatmap of energy production</h3>
+						<div  id='heatmap'>
 							<script>
-								var graph = {{ candlestick}};
-								Plotly.plot('candlestick', graph, {});
+								var graph = {{ heatmap}};
+								Plotly.plot('heatmap', graph, {});
 							</script>
 						</div>
 					</div>
 				</div>
 			</div>
+		{% endif %}
+		
+		
 	{% include "charts.jinja" %}
 	</div>
 	

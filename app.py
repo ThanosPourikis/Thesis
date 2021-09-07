@@ -3,7 +3,7 @@ from flask import render_template
 from werkzeug.utils import redirect
 
 from utils.database_interface import DB
-from utils.web_utils import get_json_for_line_fig,get_json_for_fig_scatter,get_metrics,get_json_for_line_scatter,get_candlesticks
+from utils.web_utils import *
 from datetime import date, timedelta
 import pandas as pd
 from pytz import timezone
@@ -45,13 +45,20 @@ def api_redict():
 def index(dataset):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset)
+	if 'units' in dataset:
+		heatmap = get_heatmap(df.iloc[:,7:-7 if 'cloudCover' in df.columns else -1])
+		df = df.iloc[:,:6].join(df.iloc[:,-7 if 'cloudCover' in df.columns else -1:])
+	else:
+		heatmap = None
 	return render_template('home.jinja',title = f'Train Data For {dataset} Dataset For The Past 7 Days',
-	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),dataset = dataset)
+	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),dataset = dataset,heatmap = heatmap)
 
 @app.route('/Correlation/<dataset>')
 def corrolations(dataset):
 	db = DB(datasets_dict[dataset])
-	df = db.get_data('*', dataset,f'"index" > "{week}"').set_index('SMP').dropna()
+	df = db.get_data('*', dataset,f'"index" > "{week}"')
+	df = df.iloc[:,:6].join(df.iloc[:,-7 if 'cloudCover' in df.columns else 1:])
+	df = df.set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = f'Correlation For {dataset} Dataset For The Past 7 Days',
 	df=df,get_json = get_json_for_fig_scatter,dataset = dataset)
 

@@ -39,28 +39,32 @@ def update():
 	weather =get_weather_mean()
 	db.save_df_to_db(dataframe=weather.copy(),df_name='weather')
 
-	Smp = get_SMP_data()
+	Smp = get_SMP_data(False)
 	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 
 
 
 	dataset = req.join(Smp)
 	db.save_df_to_db(dataframe=dataset,df_name='requirements')
+	
 	dataset = req.join(units).join(Smp)
 	db.save_df_to_db(dataframe=dataset,df_name='requirements_units')
+
 	dataset = req.join(weather).join(Smp)
 	db.save_df_to_db(dataframe=dataset,df_name='requirements_weather')
+
 	dataset = req.join(units).join(weather).join(Smp)
 	db.save_df_to_db(dataframe=dataset,df_name='requirements_units_weather')
+
 
 	db = DB('requirements')
 	db.save_df_to_db(dataframe=req.join(Smp)[-7*24:],df_name='requirements')
 
 	db = DB('requirements_units')
-	db.save_df_to_db(dataframe=req.join(Smp)[-7*24:],df_name='requirements_units')
+	db.save_df_to_db(dataframe=req.join(units).join(Smp)[-7*24:],df_name='requirements_units')
 
 	db = DB('requirements_weather')
 	db.save_df_to_db(dataframe=req.join(weather).join(Smp)[-7*24:],df_name='requirements_weather')
 
 	db = DB('requirements_units_weather')
-	db.save_df_to_db(dataframe=req.join(weather).join(Smp)[-7*24:],df_name='requirements_units_weather')
+	db.save_df_to_db(dataframe=req.join(units).join(weather).join(Smp)[-7*24:],df_name='requirements_units_weather')

@@ -51,3 +51,19 @@ def get_candlesticks(df):
 				low=export['low'], close=export['close'])
 					 ])
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+def get_heatmap(df):
+	units_24 = df.copy()
+	units_24 = pd.DataFrame([units_24.iloc[i] for i in range(0,units_24.shape[0],24)])
+	units_24.index = [units_24.index[i].date() for i in range(units_24.shape[0])]
+	units_24.head()
+	units_24_trans = units_24.iloc[:,:-1].transpose()
+
+	heatmap = go.Heatmap(
+		z = units_24_trans.values,
+		x= units_24_trans.columns,
+		y = units_24_trans.index
+	)
+	fig = go.Figure(data=[heatmap])
+	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
