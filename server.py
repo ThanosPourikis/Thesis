@@ -110,7 +110,6 @@ def save_infernce(dataset_name):
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 database_in = 'dataset'
-datasets = ['requirements_units','requirements_units_weather']
 
 update()
 for dataset_name in datasets:
