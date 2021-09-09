@@ -57,7 +57,8 @@ def index(dataset):
 def corrolations(dataset):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('*', dataset,f'"index" > "{week}"')
-	df = df.iloc[:,:6].join(df.iloc[:,-7 if 'cloudCover' in df.columns else 1:])
+	if 'units' in dataset:
+		df = df.iloc[:,:6].join(df.iloc[:,-7 if 'cloudCover' in df.columns else -1:])
 	df = df.set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = f'Correlation For {dataset} Dataset For The Past 7 Days',
 	df=df,get_json = get_json_for_fig_scatter,dataset = dataset)

@@ -1,28 +1,33 @@
-	<h1>Price API</h1>
-			<div class="card">
-			<div class="card-body">
-				<a href="/Api/datasets" class="card-link"><h4 class="card-title">Datasets</h4></a>
+<h2>Get current Price Prediction</h2>
+<div>Call price api by /prices_api/{dataset}</div>
+<h2>Get current Metrics</h2>
+<div>Call metrics api by /metrics_api/{dataset}/{model}</div>
+<h3>You can find All API end Points Below</h3>
+<h1>Price API</h1>
+		<div class="card">
+		<div class="card-body">
+			<a href="/Api/datasets" class="card-link"><h4 class="card-title">Datasets</h4></a>
+		</div>
+		<div class="card-body">
+			{% for i in datasets %}
+				<a href="/prices_api/{{i}}" class="card-link">{{i}}</a>
+			{% endfor %}
 			</div>
-			<div class="card-body">
-				{% for i in datasets %}
-					<a href="/prices_api/{{i}}" class="card-link">{{i}}</a>
+		</div>
+<h1>Metrics API</h1>
+<div class="card-body">
+	<a href="/Api/models" class="card-link"><h4 class="card-title">Models</h4></a>
+</div>
+{% for i in datasets %}
+		<div class="card">
+		<div class="card-body">
+				<a href="/metrics_api/{{i}}/all" class="card-link"><h4 class="card-title">{{i}}</h4></a>
+		</div>
+		<div class="card-body">
+				{% for j in models %}
+					<a href="/metrics_api/{{i}}/{{j}}" class="card-link">{{j}}</a>
 				{% endfor %}
-				</div>
 			</div>
-	<h1>Metrics API</h1>
-	<div class="card-body">
-		<a href="/Api/models" class="card-link"><h4 class="card-title">Models</h4></a>
-	</div>
-	{% for i in datasets %}
-			<div class="card">
-			<div class="card-body">
-					<a href="/metrics_api/{{i}}/all" class="card-link"><h4 class="card-title">{{i}}</h4></a>
-			</div>
-			<div class="card-body">
-					{% for j in models %}
-						<a href="/metrics_api/{{i}}/{{j}}" class="card-link">{{j}}</a>
-					{% endfor %}
-				</div>
-			</div>
-	{% endfor %}
+		</div>
+{% endfor %}
 
