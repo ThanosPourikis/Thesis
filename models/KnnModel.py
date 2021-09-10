@@ -32,7 +32,8 @@ class KnnModel:
 
 		logging.info("Training ... ")
 		start_time = time.time()
-		self.model = KNeighborsRegressor(n_neighbors=5)
+# 		self.model = KNeighborsRegressor(n_neighbors=5)
+		gs = GridSearchCV(KNeighborsRegressor(),param_grid={'n_neighbors': range(1,10),'leaf_size':range(1,30)},scoring='neg_mean_absolute_error',n_jobs=-1)
 		self.model.fit(self.x_train, self.y_train)
 		logging.info(f'Time:{time.time() - start_time}')
 
