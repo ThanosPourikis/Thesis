@@ -21,9 +21,9 @@ import requests
 def train_model(model,model_name,dataset_name):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	linear = model(data=df)
-	linear.train()
-	prediction,metrics = linear.get_results()
+	model = model(data=df)
+	model.train()
+	prediction,metrics = model.get_results()
 	db_out = DB(dataset_name)
 	db_out.save_df_to_db(prediction,model_name)
 	utils.save_metrics(metrics,model_name,db_out)
@@ -111,9 +111,9 @@ logging.basicConfig(filename='log.log',level=logging.DEBUG)
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 database_in = 'dataset'
 
-update()
+# update()
 for dataset_name in datasets:
-	save_infernce(dataset_name)
+	# save_infernce(dataset_name)
 	threading.Thread(target=train_model,args = (Linear,'Linear',dataset_name,)).start()
 	threading.Thread(target=train_model,args = (KnnModel,'KnnModel',dataset_name,)).start()
 	threading.Thread(target=train_model,args = (XgbModel,'XgbModel',dataset_name,)).start()
