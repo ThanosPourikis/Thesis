@@ -43,7 +43,7 @@ class LstmMVInput:
 
 		self.features = data.loc[:,data.columns!='SMP']
 		self.labels = data.loc[:,data.columns=='SMP']
-		self.input_size = len(self.features.columns)
+		self.input_size = self.features.columns.shape[0]
 		self.validation_size = validation_size
 		self.loss_function = loss_function
 		self.sequence_length = sequence_length
@@ -85,53 +85,54 @@ class LstmMVInput:
 
 		self.error_train = np.empty(0)
 		self.error_val = np.empty(0)
-		y_train_pred_arr = list()
-		y_val_pred_arr = list()
+		y_train_pred_arr = np.empty([0])
+		y_val_pred_arr = np.empty([0])
 		start_time = time.time()
 
-		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False)
-		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False)
+		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False,drop_last=True)
+		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False,drop_last=True)
 		while(True): # Early Stopping If error hasnt decrased in 50 epochs STOP
 		# for i in range(self.num_epochs):
 			err = []
+			temp = np.empty(0)
 			for j, k in train_data_loader:
 				model.train()
-				temp = list()
 				y_train_pred = model(j.float())
-				temp.append(y_train_pred.detach().numpy().squeeze())
+				temp = np.append(temp,y_train_pred.detach().numpy().squeeze())
 				loss = self.criterion(y_train_pred.squeeze(), k.squeeze().float())
 				err.append(loss.detach().item())
 				optimiser.zero_grad()
 				loss.backward()
 				optimiser.step()
-			y_train_pred_arr.append(temp)
+			y_train_pred_arr = np.append(y_train_pred_arr,temp)
 			self.error_train = np.append(self.error_train, (sum(err) / len(err)))
 
 			with torch.set_grad_enabled(False):#I know, too Much but to be safe
 				model.eval()
 				err = []
+				temp = np.empty(0)
 				for j, k in val_data_loader:
 						temp = list()
 						y_val_pred = model(j.float())
-						temp.append(y_val_pred.detach().numpy().squeeze())
+						temp = np.append(temp,y_val_pred.detach().numpy().squeeze())
 						loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
 						err.append(loss.detach().item())
-				y_val_pred_arr.append(temp)
+				y_val_pred_arr = np.append(y_val_pred_arr,temp)		
 			self.error_val = np.append(self.error_val,(sum(err)/len(err)))
 
 			if self.error_val[-1] <= self.error_val.min() :
 				self.model = copy.deepcopy(model)
 
-			logging.info(f"{self.name}\t Time {time.time() - start_time}\t Epoch {len(self.error_val)} {self.loss_function} \t Training\t{self.error_train[-1]}\t Validation\t{self.error_val[-1]}")
+			logging.info(f"{self.name}\t Time {time.time() - start_time:.4f}\t Epoch {self.error_val.shape[0]} {self.loss_function} \t Training\t{self.error_train[-1]:.4f}\t Validation\t{self.error_val[-1]:.4f}")
 			
-			if (len(self.error_val) - self.error_val.argmin()) > self.num_epochs:
+			if (self.error_val.shape[0] - self.error_val.argmin()) > self.num_epochs:
 				break
 
 		self.best_epoch = self.error_val.argmin()
-		logging.info(f'{self.name} Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time}')
+		logging.info(f'{self.name} Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time:.4f}')
 
-		y_train_pred_best = y_train_pred_arr[self.best_epoch][0]
-		y_val_pred_best = y_val_pred_arr[self.best_epoch][0]
+		y_train_pred_best = np.array(y_train_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
+		y_val_pred_best = np.array(y_val_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
 
 		self.y_train_prediction = scalers['labels_t'].inverse_transform(y_train_pred_best)
 		self.y_train_denorm = scalers['labels_t'].inverse_transform(y_train) 
@@ -143,9 +144,9 @@ class LstmMVInput:
 		if test==None:
 			test = self.test
 			
-		train_error = mean_absolute_error(self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction)
-		validate_error = mean_absolute_error(self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm)
-		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error} Val Score : {validate_error}')
+		train_error = mean_absolute_error(self.y_train_denorm[:self.y_train_prediction.shape[0]],self.y_train_prediction)
+		validate_error = mean_absolute_error(self.y_validate_denorm[:self.y_val_pred_denorm.shape[0]],self.y_val_pred_denorm)
+		logging.info(f'{self.name} Best Epoch {self.best_epoch} Train score : {train_error:.4f} Val Score : {validate_error:.4f}')
 		hist = pd.DataFrame()
 		hist['hist_train'] = self.error_train.tolist()
 		hist['hist_val'] = self.error_val.tolist()
@@ -176,8 +177,8 @@ class LstmMVInput:
 		y_test = y_test_scaler.inverse_transform(y_test)
 
 		metrics = get_metrics_df(
-			self.y_train_denorm[-len(self.y_train_prediction):],self.y_train_prediction,
-			self.y_validate_denorm[-len(self.y_val_pred_denorm):],self.y_val_pred_denorm,
+			self.y_train_denorm[:self.y_train_prediction.shape[0]],self.y_train_prediction,
+			self.y_validate_denorm[:self.y_val_pred_denorm.shape[0]],self.y_val_pred_denorm,
 			y_test,test_pred)
 
 		self.test['Prediction'] = test_pred.flatten()
