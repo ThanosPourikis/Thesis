@@ -21,28 +21,18 @@ class XgbModel:
 		self.features = data.loc[:,data.columns!='SMP']
 		self.labels = data.loc[:,'SMP']
 		self.data = data
-		self.parameters = {
-		"learning_rate": [0.09],
-		"max_depth": [10],
-		"n_estimators": [100],
-		"colsample_bytree": [0.8],
-		"random_state": [96],
-		}
-		self.parameters = {
-			"learning_rate": [0.1,0.5],
-			"max_depth": [9],
-			"n_estimators": [49],
-			'subsample': [0.8],
-			"colsample_bytree": [1],
-			'colsample_bylevel' : [0.8],
-			"random_state": [96],
-		}
+		{'colsample_bylevel': 0.8,
+		'colsample_bytree': 1,
+		'learning_rate': 0.09, 
+		'max_depth': 9, 'n_estimators': 150,
+		'random_state': 96,
+		'subsample': 0.8}
 
 	def train(self):
 
 		self.labels = self.labels.reset_index(drop = True).dropna()
 		self.features = (self.features).loc[:,self.features.columns!='Date'][:len(self.labels)].dropna()
-		self.model = xgboost.XGBRegressor(learning_rate = 0.09,colsample_bytree = 0.8, n_estimators=49,max_depth= 8,n_jobs= -1)
+		self.model = xgboost.XGBRegressor(learning_rate = 0.09, colsample_bylevel = 0.8, subsample = 0.8, n_estimators=150,max_depth= 9,n_jobs= -1)
 		# cs = GridSearchCV(model, self.parameters)
 		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels,shuffle=True,random_state=96,
 																	test_size=self.validation_size)
