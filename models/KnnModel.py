@@ -22,7 +22,6 @@ class KnnModel:
 		self.features = data.loc[:,data.columns!='SMP']
 		self.labels = data.loc[:,'SMP']
 		self.validation_size = validation_size
-		self.params = {'leaf_size': [10], 'n_neighbors': [5]}
 		
 		
 
@@ -32,8 +31,8 @@ class KnnModel:
 
 		logging.info("Training ... ")
 		start_time = time.time()
-# 		self.model = KNeighborsRegressor(n_neighbors=5)
-		self.model = GridSearchCV(KNeighborsRegressor(),param_grid={'n_neighbors': range(1,10),'leaf_size':range(1,30)},scoring='neg_mean_absolute_error',n_jobs=-1)
+		self.model = KNeighborsRegressor(n_neighbors=3,leaf_size=1)
+		# self.model = GridSearchCV(KNeighborsRegressor(),param_grid={'n_neighbors': range(1,10),'leaf_size':range(1,30)},scoring='neg_mean_absolute_error',n_jobs=-1)
 		self.model.fit(self.x_train, self.y_train)
 		logging.info(f'Time:{time.time() - start_time}')
 

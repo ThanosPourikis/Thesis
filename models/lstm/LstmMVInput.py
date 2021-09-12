@@ -61,19 +61,19 @@ class LstmMVInput:
 		self.x_train, self.x_validate, self.y_train, self.y_validate = train_test_split(self.features, self.labels, 
 		random_state=96,test_size=self.validation_size,shuffle=False)
 		
-		x_train,y_train = sliding_windows(self.x_train,self.y_train)
-		x_validate,y_validate = sliding_windows(self.x_validate,self.y_validate)
+		self.x_train,self.y_train = sliding_windows(self.x_train,self.y_train,sequence_len=self.sequence_length ,window_step=1)
+		self.x_validate,self.y_validate = sliding_windows(self.x_validate,self.y_validate,sequence_len=self.sequence_length ,window_step=1)
 		scalers = {
 			'feature_t' : MinMaxScaler(feature_range=(-1, 1)),
 			'feature_v' : MinMaxScaler(feature_range=(-1, 1)),
 			'labels_t' : MinMaxScaler(feature_range=(-1, 1)),
 			'labels_v' : MinMaxScaler(feature_range=(-1, 1))
 		}
-		x_train = scalers['feature_t'].fit_transform(x_train.reshape(-1, x_train.shape[-1])).reshape(x_train.shape)
-		x_validate = scalers['feature_v'].fit_transform(x_validate.reshape(-1, x_validate.shape[-1])).reshape(x_validate.shape)
+		self.x_train = scalers['feature_t'].fit_transform(self.x_train.reshape(-1, self.x_train.shape[-1])).reshape(self.x_train.shape)
+		self.x_validate = scalers['feature_v'].fit_transform(self.x_validate.reshape(-1, self.x_validate.shape[-1])).reshape(self.x_validate.shape)
 
-		y_train = scalers['labels_t'].fit_transform(y_train.squeeze())
-		y_validate = scalers['labels_v'].fit_transform(y_validate.squeeze())
+		self.y_train = scalers['labels_t'].fit_transform(self.y_train.squeeze())
+		self.y_validate = scalers['labels_v'].fit_transform(self.y_validate.squeeze())
 
 		model = LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
 						num_layers=self.num_layers,batch_first=True)
@@ -85,26 +85,26 @@ class LstmMVInput:
 
 		self.error_train = np.empty(0)
 		self.error_val = np.empty(0)
-		y_train_pred_arr = np.empty([0])
+		self.y_train_pred_arr = np.empty([0])
 		y_val_pred_arr = np.empty([0])
 		start_time = time.time()
 
-		train_data_loader = DataLoader(RequirementsSample(x_train,y_train),self.batch_size, shuffle=False,drop_last=True)
-		val_data_loader = DataLoader(RequirementsSample(x_validate,y_validate),self.batch_size, shuffle=False,drop_last=True)
+		train_data_loader = DataLoader(RequirementsSample(self.x_train,self.y_train),self.batch_size, shuffle=False,drop_last=True)
+		val_data_loader = DataLoader(RequirementsSample(self.x_validate,self.y_validate),self.batch_size, shuffle=False,drop_last=True)
 		while(True): # Early Stopping If error hasnt decrased in 50 epochs STOP
 		# for i in range(self.num_epochs):
 			err = []
 			temp = np.empty(0)
 			for j, k in train_data_loader:
 				model.train()
-				y_train_pred = model(j.float())
-				temp = np.append(temp,y_train_pred.detach().numpy().squeeze())
-				loss = self.criterion(y_train_pred.squeeze(), k.squeeze().float())
+				self.y_train_pred = model(j.float())
+				temp = np.append(temp,self.y_train_pred.detach().numpy().squeeze())
+				loss = self.criterion(self.y_train_pred.squeeze(), k.squeeze().float())
 				err.append(loss.detach().item())
 				optimiser.zero_grad()
 				loss.backward()
 				optimiser.step()
-			y_train_pred_arr = np.append(y_train_pred_arr,temp)
+			self.y_train_pred_arr = np.append(self.y_train_pred_arr,temp)
 			self.error_train = np.append(self.error_train, (sum(err) / len(err)))
 
 			with torch.set_grad_enabled(False):#I know, too Much but to be safe
@@ -131,14 +131,14 @@ class LstmMVInput:
 		self.best_epoch = self.error_val.argmin()
 		logging.info(f'{self.name} Training Completed Best_epoch : {self.best_epoch} Training Time {time.time() - start_time:.4f}')
 
-		y_train_pred_best = np.array(y_train_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
+		self.y_train_pred_best = np.array(self.y_train_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
 		y_val_pred_best = np.array(y_val_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
 
-		self.y_train_prediction = scalers['labels_t'].inverse_transform(y_train_pred_best)
-		self.y_train_denorm = scalers['labels_t'].inverse_transform(y_train) 
+		self.y_train_prediction = scalers['labels_t'].inverse_transform(self.y_train_pred_best)
+		self.y_train_denorm = scalers['labels_t'].inverse_transform(self.y_train) 
 
 		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
-		self.y_validate_denorm = scalers['labels_v'].inverse_transform(y_validate)
+		self.y_validate_denorm = scalers['labels_v'].inverse_transform(self.y_validate)
 
 	def get_results(self,test = None):
 		if test==None:
