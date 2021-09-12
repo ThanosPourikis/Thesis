@@ -31,7 +31,7 @@ def train_model(model,model_name,dataset_name):
 def Lstm(dataset_name):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = 'Vanilla')
+	lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = f'Vanilla {dataset_name}')
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db_out = DB(dataset_name)
@@ -78,7 +78,7 @@ def hybrid_lstm(dataset_name):
 
 	df = df.loc[:,['XGB','Knn','Linear','SMP']]
 
-	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = 'Hybrid')
+	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = f'Hybrid {dataset_name}')
 	hybrid_lstm.train()
 	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
 	db_out = DB(dataset_name)
