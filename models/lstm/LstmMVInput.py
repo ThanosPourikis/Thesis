@@ -5,7 +5,10 @@ import time
 from os import path
 
 import numpy as np
-import torch
+from torch.nn import L1Loss
+from torch.optim import Adam
+from torch import from_numpy,Tensor
+
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import copy
@@ -42,7 +45,7 @@ class LstmMVInput:
 
 
 		self.features = data.loc[:,data.columns!='SMP']
-		self.labels = data.loc[:,data.columns=='SMP']
+		self.labels = data['SMP']
 		self.input_size = self.features.columns.shape[0]
 		self.validation_size = validation_size
 		self.loss_function = loss_function
@@ -63,25 +66,25 @@ class LstmMVInput:
 		
 		self.x_train,self.y_train = sliding_windows(self.x_train,self.y_train,sequence_len=self.sequence_length ,window_step=1)
 		self.x_validate,self.y_validate = sliding_windows(self.x_validate,self.y_validate,sequence_len=self.sequence_length ,window_step=1)
-		scalers = {
-			'feature_t' : MinMaxScaler(feature_range=(-1, 1)),
-			'feature_v' : MinMaxScaler(feature_range=(-1, 1)),
-			'labels_t' : MinMaxScaler(feature_range=(-1, 1)),
-			'labels_v' : MinMaxScaler(feature_range=(-1, 1))
-		}
-		self.x_train = scalers['feature_t'].fit_transform(self.x_train.reshape(-1, self.x_train.shape[-1])).reshape(self.x_train.shape)
-		self.x_validate = scalers['feature_v'].fit_transform(self.x_validate.reshape(-1, self.x_validate.shape[-1])).reshape(self.x_validate.shape)
+		
+		feature_t_s = MinMaxScaler(feature_range=(-1, 1))
+		feature_v_s = MinMaxScaler(feature_range=(-1, 1))
+		labels_t_s = MinMaxScaler(feature_range=(-1, 1))
+		labels_v_s = MinMaxScaler(feature_range=(-1, 1))
 
-		self.y_train = scalers['labels_t'].fit_transform(self.y_train.squeeze())
-		self.y_validate = scalers['labels_v'].fit_transform(self.y_validate.squeeze())
+		self.x_train = feature_t_s.fit_transform(self.x_train.reshape(-1, self.x_train.shape[-1])).reshape(self.x_train.shape)
+		self.x_validate = feature_v_s.fit_transform(self.x_validate.reshape(-1, self.x_validate.shape[-1])).reshape(self.x_validate.shape)
+
+		self.y_train = labels_t_s.fit_transform(self.y_train.squeeze())
+		self.y_validate = labels_v_s.fit_transform(self.y_validate.squeeze())
 
 		model = LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
 						num_layers=self.num_layers,batch_first=True)
 
 
 
-		self.criterion = torch.nn.L1Loss()
-		optimiser = torch.optim.Adam(model.parameters(), self.learning_rate)
+		self.criterion = L1Loss()
+		optimiser = Adam(model.parameters(), self.learning_rate)
 
 		self.error_train = np.empty(0)
 		self.error_val = np.empty(0)
@@ -107,17 +110,16 @@ class LstmMVInput:
 			self.y_train_pred_arr = np.append(self.y_train_pred_arr,temp)
 			self.error_train = np.append(self.error_train, (sum(err) / len(err)))
 
-			with torch.set_grad_enabled(False):#I know, too Much but to be safe
-				model.eval()
-				err = []
-				temp = np.empty(0)
-				for j, k in val_data_loader:
-						temp = list()
-						y_val_pred = model(j.float())
-						temp = np.append(temp,y_val_pred.detach().numpy().squeeze())
-						loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
-						err.append(loss.detach().item())
-				y_val_pred_arr = np.append(y_val_pred_arr,temp)		
+			model.eval()
+			err = []
+			temp = np.empty(0)
+			for j, k in val_data_loader:
+					temp = list()
+					y_val_pred = model(j.float())
+					temp = np.append(temp,y_val_pred.detach().numpy().squeeze())
+					loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
+					err.append(loss.detach().item())
+			y_val_pred_arr = np.append(y_val_pred_arr,temp)		
 			self.error_val = np.append(self.error_val,(sum(err)/len(err)))
 
 			if self.error_val[-1] <= self.error_val.min() :
@@ -134,11 +136,11 @@ class LstmMVInput:
 		self.y_train_pred_best = np.array(self.y_train_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
 		y_val_pred_best = np.array(y_val_pred_arr.reshape(self.error_train.shape[0],-1,32,24)[self.best_epoch]).reshape(-1,24)
 
-		self.y_train_prediction = scalers['labels_t'].inverse_transform(self.y_train_pred_best)
-		self.y_train_denorm = scalers['labels_t'].inverse_transform(self.y_train) 
+		self.y_train_prediction = labels_t_s.inverse_transform(self.y_train_pred_best)
+		self.y_train_denorm = labels_t_s.inverse_transform(self.y_train) 
 
-		self.y_val_pred_denorm = scalers['labels_v'].inverse_transform(y_val_pred_best)
-		self.y_validate_denorm = scalers['labels_v'].inverse_transform(self.y_validate)
+		self.y_val_pred_denorm = labels_v_s.inverse_transform(y_val_pred_best)
+		self.y_validate_denorm = labels_v_s.inverse_transform(self.y_validate)
 
 	def get_results(self,test = None):
 		if test==None:
@@ -162,17 +164,16 @@ class LstmMVInput:
 		y_test = y_test_scaler.fit_transform(y_test)
 		# y_test = torch.from_numpy(y_test).type(torch.Tensor)
 		
-		with torch.set_grad_enabled(False):
-			self.model.eval()
-			err = []
-			test_data_loader = DataLoader(RequirementsSample(x_test,y_test),1, shuffle=False)
-			pred_arr = []
-			temp = list()
-			for j, k in test_data_loader:
-					pred_arr = self.model(j.float())
-					temp.append(pred_arr.detach().numpy().squeeze())
-					loss = self.criterion(pred_arr.squeeze(),k.squeeze().float())
-					err.append(loss.detach().item())
+		self.model.eval()
+		err = []
+		test_data_loader = DataLoader(RequirementsSample(x_test,y_test),1, shuffle=False)
+		pred_arr = []
+		temp = list()
+		for j, k in test_data_loader:
+				pred_arr = self.model(j.float())
+				temp.append(pred_arr.detach().numpy().squeeze())
+				loss = self.criterion(pred_arr.squeeze(),k.squeeze().float())
+				err.append(loss.detach().item())
 		test_pred = y_test_scaler.inverse_transform(temp)
 		y_test = y_test_scaler.inverse_transform(y_test)
 
@@ -187,7 +188,7 @@ class LstmMVInput:
 			x_infe,_ = sliding_windows(self.inference.loc[:,self.inference.columns != 'SMP'],self.inference.loc[:,'SMP'],sequence_len=24,window_step=24)
 			infe_scaler = MinMaxScaler(feature_range=(-1, 1))
 			x_infe = infe_scaler.fit_transform(x_infe.squeeze()).reshape(x_infe.shape)
-			x_infe = torch.from_numpy(x_infe).type(torch.Tensor)
+			x_infe = from_numpy(x_infe).type(Tensor)
 			self.model.eval()
 			pred_arr = self.model(x_infe)
 			self.inference['Inference'] = y_test_scaler.inverse_transform(pred_arr.detach().numpy().reshape(1,-1)).flatten()
