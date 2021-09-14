@@ -1,0 +1,25 @@
+linear_params:
+  n_jobs: -1
+
+knn_params:
+  n_neighbors: 3
+  leaf_size: 1
+  
+xgb_params:
+  learning_rate: 0.09
+  colsample_bylevel: 0.8
+  subsample: 0.8
+  n_estimators: 150
+  max_depth: 9
+  n_jobs: -1
+
+lstm_params:
+  learning_rate: 0.001
+  validation_size: 0.2
+  sequence_length: 24
+  batch_size : 32
+  hidden_size: 128
+  num_layers: 1
+  output_dim: 1
+  num_epochs: 20
+  model: None

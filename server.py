@@ -1,37 +1,32 @@
 import json
-
+import yaml
 from utils.database_interface import DB
-from models.XgB import XgbModel
 from sklearn import utils
 from models.lstm.LstmMVInput import LstmMVInput
 import pandas as pd
-from models.KnnModel import KnnModel
-from models.Linear import Linear
+from models.model import get_model_results
 from utils import utils
 import logging
 from utils.update_data import update
 import threading
 from sklearn.utils import shuffle
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsRegressor
-import xgboost
+from xgboost import XGBRegressor
 import requests
 
-def train_model(model,model_name,dataset_name):
+def train_model(model,model_name,dataset_name,params):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	model = model(data=df)
-	model.train()
-	prediction,metrics = model.get_results()
+	prediction,metrics = get_model_results(df,params,model_name,model)
 	db_out = DB(dataset_name)
 	db_out.save_df_to_db(prediction,model_name)
 	utils.save_metrics(metrics,model_name,db_out)
 
-def Lstm(dataset_name):
+def Lstm(dataset_name,params):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = f'Vanilla {dataset_name}')
+	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',**params['lstm_params'])
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db_out = DB(dataset_name)
@@ -41,7 +36,7 @@ def Lstm(dataset_name):
 	metrics['best_epoch'] = best_epoch
 	utils.save_metrics(metrics,'lstm',db_out)
 
-def hybrid_lstm(dataset_name):
+def hybrid_lstm(dataset_name,params):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
 
@@ -63,22 +58,16 @@ def hybrid_lstm(dataset_name):
 	df['Linear'] = lr.predict(data)
 
 
-	gsK = KNeighborsRegressor(49,n_jobs=-1).fit(x_train, y_train)
+	gsK = KNeighborsRegressor(**params['knn_params'],n_jobs=-1).fit(x_train, y_train)
 	df['Knn'] = gsK.predict(data)
 
-	gsX = xgboost.XGBRegressor(learning_rate = 0.1,
-								colsample_bytree = 1,
-								colsample_bylevel=0.8,
-								subsample=0.8,
-								n_estimators=49,
-								max_depth= 9,
-								n_jobs= -1).fit(x_train,y_train)
+	gsX = XGBRegressor(**params['xgb_params']).fit(x_train,y_train)
 
 	df['XGB'] = gsX.predict(data)
 
 	df = df.loc[:,['XGB','Knn','Linear','SMP']]
 
-	hybrid_lstm = LstmMVInput(utils.MAE,df,num_epochs=20,batch_size=32,sequence_length=24,name = f'Hybrid {dataset_name}')
+	hybrid_lstm = LstmMVInput(utils.MAE,df,f'Hybrid {dataset_name}',**params['lstm_params'])
 	hybrid_lstm.train()
 	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
 	db_out = DB(dataset_name)
@@ -110,15 +99,20 @@ def save_infernce(dataset_name):
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 database_in = 'dataset'
-
+try: 
+	with open ('yaml.yaml', 'r') as file:
+		params = yaml.safe_load(file)
+except Exception as e:
+	print(e)
+	
 update()
 for dataset_name in datasets:
 	save_infernce(dataset_name)
-	threading.Thread(target=train_model,args = (Linear,'Linear',dataset_name,)).start()
-	threading.Thread(target=train_model,args = (KnnModel,'KnnModel',dataset_name,)).start()
-	threading.Thread(target=train_model,args = (XgbModel,'XgbModel',dataset_name,)).start()
-	threading.Thread(target=Lstm,args = (dataset_name,)).start()
-	threading.Thread(target=hybrid_lstm,args = (dataset_name,)).start()
+	threading.Thread(target=train_model,args = (LinearRegression,'Linear',dataset_name,params['linear_params'],)).start()
+	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',dataset_name,params['knn_params'],)).start()
+	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',dataset_name,params['xgb_params'],)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,params,)).start()
+	threading.Thread(target=hybrid_lstm,args = (dataset_name,params,)).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')
 # jsonData = json.loads(content.content)
