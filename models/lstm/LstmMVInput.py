@@ -100,9 +100,9 @@ class LstmMVInput:
 			temp = np.empty(0)
 			for j, k in train_data_loader:
 				model.train()
-				self.y_train_pred = model(j.float())
-				temp = np.append(temp,self.y_train_pred.detach().numpy().squeeze())
-				loss = self.criterion(self.y_train_pred.squeeze(), k.squeeze().float())
+				y_train_pred = model(j.float())
+				temp = np.append(temp,y_train_pred.detach().numpy().squeeze())
+				loss = self.criterion(y_train_pred.squeeze(), k.squeeze().float())
 				err.append(loss.detach().item())
 				optimiser.zero_grad()
 				loss.backward()
@@ -114,11 +114,10 @@ class LstmMVInput:
 			err = []
 			temp = np.empty(0)
 			for j, k in val_data_loader:
-					temp = list()
-					y_val_pred = model(j.float())
-					temp = np.append(temp,y_val_pred.detach().numpy().squeeze())
-					loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
-					err.append(loss.detach().item())
+				y_val_pred = model(j.float())
+				temp = np.append(temp,y_val_pred.detach().numpy().squeeze())
+				loss = self.criterion(y_val_pred.squeeze(),k.squeeze().float())
+				err.append(loss.detach().item())
 			y_val_pred_arr = np.append(y_val_pred_arr,temp)		
 			self.error_val = np.append(self.error_val,(sum(err)/len(err)))
 
