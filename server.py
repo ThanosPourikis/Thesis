@@ -26,7 +26,7 @@ def train_model(model,model_name,dataset_name,params):
 def Lstm(dataset_name,params):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',**params['lstm_params'])
+	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',**params)
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db_out = DB(dataset_name)
@@ -111,7 +111,7 @@ for dataset_name in datasets:
 	threading.Thread(target=train_model,args = (LinearRegression,'Linear',dataset_name,params['linear_params'],)).start()
 	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',dataset_name,params['knn_params'],)).start()
 	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',dataset_name,params['xgb_params'],)).start()
-	threading.Thread(target=Lstm,args = (dataset_name,params,)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,params['lstm_params'],)).start()
 	threading.Thread(target=hybrid_lstm,args = (dataset_name,params,)).start()
 
 # content = requests.get('http://thanospourikis.pythonanywhere.com/api')

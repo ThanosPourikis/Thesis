@@ -6,7 +6,7 @@ from os import path
 
 import numpy as np
 from torch.nn import L1Loss
-from torch.optim import Adam
+from torch.optim import Adam,Adagrad
 from torch import from_numpy,Tensor
 
 from sklearn.preprocessing import MinMaxScaler
@@ -32,7 +32,7 @@ class LstmMVInput:
 				 hidden_size=128,
 				 num_layers=1,
 				 output_dim=1,
-				 num_epochs=150,
+				 num_epochs=20,
 				 model = None):
 		# data = data.set_index('Date')
 		if data.isnull().values.any():
@@ -84,7 +84,7 @@ class LstmMVInput:
 
 
 		self.criterion = L1Loss()
-		optimiser = Adam(model.parameters(), self.learning_rate)
+		optimiser = Adagrad(model.parameters(), self.learning_rate)
 
 		self.error_train = np.empty(0)
 		self.error_val = np.empty(0)
