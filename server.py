@@ -18,7 +18,7 @@ import requests
 def train_model(model,model_name,dataset_name,params):
 	db_in =DB(database_in)
 	df = db_in.get_data('*',dataset_name)
-	prediction,metrics = get_model_results(df,params,model_name,model)
+	prediction,metrics = get_model_results(df,params[dataset_name],model_name,model)
 	db_out = DB(dataset_name)
 	db_out.save_df_to_db(prediction,model_name)
 	utils.save_metrics(metrics,model_name,db_out)
