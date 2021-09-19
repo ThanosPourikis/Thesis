@@ -1,4 +1,3 @@
-import json
 import yaml
 from utils.database_interface import DB
 from sklearn import utils
@@ -9,24 +8,21 @@ from utils import utils
 import logging
 from utils.update_data import update
 import threading
-from sklearn.utils import shuffle
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from xgboost import XGBRegressor
-import requests
+from models.lstm.Lstm_model import LSTM
+from models.lstm.Hybrid_Lstm_model import Hybrid_LSTM
 
-def train_model(model,model_name,dataset_name,params):
-	db_in =DB(database_in)
-	df = db_in.get_data('*',dataset_name)
+
+def train_model(model,model_name,df,dataset_name,params):
 	prediction,metrics = get_model_results(df,params[dataset_name],model_name,model)
 	db_out = DB(dataset_name)
 	db_out.save_df_to_db(prediction,model_name)
 	utils.save_metrics(metrics,model_name,db_out)
 
-def Lstm(dataset_name,params):
-	db_in =DB(database_in)
-	df = db_in.get_data('*',dataset_name)
-	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',**params)
+def Lstm(dataset_name,params,df,LSTM):
+	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',LSTM = LSTM,**params)
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db_out = DB(dataset_name)
@@ -36,38 +32,9 @@ def Lstm(dataset_name,params):
 	metrics['best_epoch'] = best_epoch
 	utils.save_metrics(metrics,'lstm',db_out)
 
-def hybrid_lstm(dataset_name,params):
-	db_in =DB(database_in)
-	df = db_in.get_data('*',dataset_name)
+def hybrid_lstm(dataset_name,params,df,LSTM):
 
-	if df.isnull().values.any():
-		data = df.copy()
-		features = data.loc[:,data.columns != 'SMP'][:-(24*8)]
-		labels = data.loc[:,'SMP'][:-(24*8)]
-		data = data.loc[:,data.columns != 'SMP']
-	else:
-		data = df.copy()
-		features = data.loc[:,data.columns != 'SMP'][:-(24*7)]
-		labels = data.loc[:,'SMP'][:-(24*7)]
-		data = data.loc[:,data.columns != 'SMP']
-	
-
-	x_train,y_train = shuffle(features,labels)
-	lr = LinearRegression().fit(x_train, y_train)
-	
-	df['Linear'] = lr.predict(data)
-
-
-	gsK = KNeighborsRegressor(**params['knn_params'],n_jobs=-1).fit(x_train, y_train)
-	df['Knn'] = gsK.predict(data)
-
-	gsX = XGBRegressor(**params['xgb_params']).fit(x_train,y_train)
-
-	df['XGB'] = gsX.predict(data)
-
-	df = df.loc[:,['XGB','Knn','Linear','SMP']]
-
-	hybrid_lstm = LstmMVInput(utils.MAE,df,f'Hybrid {dataset_name}',**params['lstm_params'])
+	hybrid_lstm = LstmMVInput(utils.MAE,df,f'Hybrid {dataset_name}',LSTM = LSTM,**params['lstm_params'])
 	hybrid_lstm.train()
 	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
 	db_out = DB(dataset_name)
@@ -104,26 +71,16 @@ try:
 		params = yaml.safe_load(file)
 except Exception as e:
 	print(e)
-	
+
 update()
+db_in =DB(database_in)
 for dataset_name in datasets:
 	save_infernce(dataset_name)
-	threading.Thread(target=train_model,args = (LinearRegression,'Linear',dataset_name,params['linear_params'],)).start()
-	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',dataset_name,params['knn_params'],)).start()
-	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',dataset_name,params['xgb_params'],)).start()
-	threading.Thread(target=Lstm,args = (dataset_name,params['lstm_params'],)).start()
-	threading.Thread(target=hybrid_lstm,args = (dataset_name,params,)).start()
-
-# content = requests.get('http://thanospourikis.pythonanywhere.com/api')
-# jsonData = json.loads(content.content)
-# infe = pd.DataFrame(jsonData).set_index("Date")
-
-# db =DB(database)
-# df = db.get_data('*',dataset).set_index('Date')[-len(infe):]
-# infe = db.get_data('*','infernce').set_index('Date')[-len(infe):]
-
-
-# for i in infe.columns:
-# 	mae = mean_absolute_error(df['SMP'],infe[i])
-# 	print(f'{i} : {mae}')
-
+	df = db_in.get_data('*',dataset_name)
+	df.insert(df.shape[1]-1,'lag_24',df['SMP'].shift(24)) 
+	df = df[df['lag_24'].notna()]
+	threading.Thread(target=train_model,args = (LinearRegression,'Linear',df,dataset_name,params['linear_params'],)).start()
+	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',df,dataset_name,params['knn_params'],)).start()
+	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',df,dataset_name,params['xgb_params'],)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,params['lstm_params'],df,LSTM,)).start()
+	threading.Thread(target=hybrid_lstm,args = (dataset_name,params,df,Hybrid_LSTM,)).start()

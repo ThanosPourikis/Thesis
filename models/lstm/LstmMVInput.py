@@ -1,12 +1,10 @@
 
 import logging
-from math import inf
 import time
-from os import path
 
 import numpy as np
 from torch.nn import L1Loss
-from torch.optim import Adam,Adagrad
+from torch.optim import Adam
 from torch import from_numpy,Tensor
 
 from sklearn.preprocessing import MinMaxScaler
@@ -14,17 +12,15 @@ import pandas as pd
 import copy
 
 from models.utils import get_metrics_df
-from models.lstm.Lstm_model import LSTM
 from torch.utils.data import DataLoader
 from models.lstm.utils import RequirementsSample, sliding_windows
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
-from utils.database_interface import DB
 
 ### TODO Add Hybrid Code
 
 class LstmMVInput:
-	def __init__(self, loss_function, data,name,
+	def __init__(self, loss_function, data,name,LSTM,
 				 learning_rate=0.001,
 				 validation_size= 0.2,
 				 sequence_length=24,
@@ -43,7 +39,7 @@ class LstmMVInput:
 			self.test = data[-(7*24):]
 			data = data[:-(7*24)]
 
-
+		self.LSTM = LSTM
 		self.features = data.loc[:,data.columns!='SMP']
 		self.labels = data['SMP']
 		self.input_size = self.features.columns.shape[0]
@@ -78,13 +74,14 @@ class LstmMVInput:
 		self.y_train = labels_t_s.fit_transform(self.y_train.squeeze())
 		self.y_validate = labels_v_s.fit_transform(self.y_validate.squeeze())
 
-		model = LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
+
+		model = self.LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
 						num_layers=self.num_layers,batch_first=True)
 
 
 
 		self.criterion = L1Loss()
-		optimiser = Adagrad(model.parameters(), self.learning_rate)
+		optimiser = Adam(model.parameters(), self.learning_rate)
 
 		self.error_train = np.empty(0)
 		self.error_val = np.empty(0)
