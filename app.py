@@ -1,5 +1,5 @@
 import flask
-from flask import render_template
+from flask import render_template,Flask
 from werkzeug.utils import redirect
 
 from utils.database_interface import DB
@@ -11,7 +11,7 @@ from pytz import timezone
 
 localTz = timezone('CET')
 
-app = flask.Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
+app = Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
 today = pd.to_datetime(date.today())
 week = str(localTz.localize(today - timedelta(weeks=1)))
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
