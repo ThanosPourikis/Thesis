@@ -27,10 +27,7 @@ class DB:
 			df = pd.read_sql(query, self.connection,index_col='index')
 		except :
 			df = pd.read_sql(query, self.connection)
-		try:
-			df['SMP'] = pd.to_numeric(df['SMP'])
-		except:
-			pass
+		
 		try:
 			df.index = [datetime.fromisoformat(i) for i in df.index ]
 			df.index = pd.to_datetime(df.index)

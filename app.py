@@ -68,38 +68,21 @@ def page_for_ml_model(dataset,name):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('*',name)
 	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
+	
+	if 'Lstm' in name:
+		hist = db.get_data('*',f'hist_{name}')
+		metrics = get_metrics(name,db)
+		return render_template('lstm.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
+							chart_json = get_json_for_line_scatter(df,df.columns),
+							metrics = metrics,
+							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
+	else:
+		metrics = get_metrics(name,db)
 
-	metrics = get_metrics(name,db)
-
-	return render_template('model.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
+		return render_template('model.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,dataset = dataset)
 
-@app.route('/Lstm/<dataset>')
-def lstm(dataset):
-	db = DB(datasets_dict[dataset])
-	df = db.get_data('*','Lstm')
-	df['Previous Prediction'] = db.get_data('"index","Lstm"','infernce')
-	hist = db.get_data('*','hist_lstm')
-
-	metrics = get_metrics('Lstm',db)
-	return render_template('lstm.jinja', title = f'Lstm Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics,
-							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
-
-@app.route('/Hybrid_Lstm/<dataset>')
-def hybrid_lstm(dataset):
-	db = DB(datasets_dict[dataset])
-	df = db.get_data('*','Hybrid_Lstm')
-	df['Previous Prediction'] = db.get_data('"index","Hybrid_Lstm"','infernce')
-	hist = db.get_data('*','hist_Hybrid_Lstm')
-	
-	metrics = get_metrics('Hybrid_Lstm',db)
-	return render_template('lstm.jinja', title = f'Hybrid Lstm Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
-							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics,
-							hist_json = get_json_for_line_scatter(hist,['hist_train','hist_val'],metrics.iloc[0]['best_epoch']),dataset = dataset)
 
 @app.route('/prices_api/<dataset>')
 def prices_api(dataset):

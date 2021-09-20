@@ -39,7 +39,7 @@ def update():
 	weather =get_weather_mean()
 	db.save_df_to_db(dataframe=weather.copy(),df_name='weather')
 
-	Smp = get_SMP_data()
+	Smp = get_SMP_data(False)
 	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 
 

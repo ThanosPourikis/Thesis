@@ -36,6 +36,7 @@ def get_SMP_data(new_files = True):
 			print('Not xlsx File')
 
 	export.columns = ['SMP']
+	export = pd.to_numeric(export['SMP'])
 	export = export.sort_index()
 	export.to_csv('datasets/SMP.csv')
 	return export
