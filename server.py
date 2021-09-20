@@ -21,29 +21,16 @@ def train_model(model,model_name,df,dataset_name,params):
 	db_out.save_df_to_db(prediction,model_name)
 	utils.save_metrics(metrics,model_name,db_out)
 
-def Lstm(dataset_name,params,df,LSTM):
-	lstm = LstmMVInput(utils.MAE,df,name = f'Vanilla {dataset_name}',LSTM = LSTM,**params)
+def Lstm(dataset_name,params,df,LSTM,name):
+	lstm = LstmMVInput(utils.MAE,df,name = f'{name} {dataset_name}',LSTM = LSTM,**params)
 	lstm.train()
 	prediction,metrics,hist,best_epoch = lstm.get_results()
 	db_out = DB(dataset_name)
 
-	db_out.save_df_to_db(hist,'hist_lstm')
-	db_out.save_df_to_db(prediction,'lstm')
+	db_out.save_df_to_db(hist,f'hist_{name}')
+	db_out.save_df_to_db(prediction,name)
 	metrics['best_epoch'] = best_epoch
-	utils.save_metrics(metrics,'lstm',db_out)
-
-def hybrid_lstm(dataset_name,params,df,LSTM):
-
-	hybrid_lstm = LstmMVInput(utils.MAE,df,f'Hybrid {dataset_name}',LSTM = LSTM,**params['lstm_params'])
-	hybrid_lstm.train()
-	prediction,metrics,hist,best_epoch = hybrid_lstm.get_results()
-	db_out = DB(dataset_name)
-
-	db_out.save_df_to_db(hist,'hist_Hybrid_Lstm')
-
-	db_out.save_df_to_db(prediction,'Hybrid_Lstm')
-	metrics['best_epoch'] = best_epoch
-	utils.save_metrics(metrics,'Hybrid_Lstm',db_out)
+	utils.save_metrics(metrics,name,db_out)
 
 def save_infernce(dataset_name):
 	try:
@@ -82,5 +69,5 @@ for dataset_name in datasets:
 	threading.Thread(target=train_model,args = (LinearRegression,'Linear',df,dataset_name,params['linear_params'],)).start()
 	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',df,dataset_name,params['knn_params'],)).start()
 	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',df,dataset_name,params['xgb_params'],)).start()
-	threading.Thread(target=Lstm,args = (dataset_name,params['lstm_params'],df,LSTM,)).start()
-	threading.Thread(target=hybrid_lstm,args = (dataset_name,params,df,Hybrid_LSTM,)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,params['Lstm_params'],df,LSTM,'Lstm',)).start()
+	threading.Thread(target=Lstm,args = (dataset_name,params['Lstm_params'],df,Hybrid_LSTM,'Hybrid_LSTM',)).start()
