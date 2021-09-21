@@ -7,7 +7,7 @@ from data.ADMHE_files import get_excel_data
 from data.get_weather_data import download_weather_data, get_weather_data,get_weather_mean
 import config
 
-def update():
+def update(new_data):
 	db = DB('dataset')
 	try:
 		start_date = db.get_data('MAX("index")','isp1').values[0,0]
@@ -39,7 +39,7 @@ def update():
 	weather =get_weather_mean()
 	db.save_df_to_db(dataframe=weather.copy(),df_name='weather')
 
-	Smp = get_SMP_data(False)
+	Smp = get_SMP_data(new_data)
 	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 
 
