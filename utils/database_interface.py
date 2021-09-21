@@ -23,18 +23,14 @@ class DB:
 		else:
 			query = f'SELECT {columns} FROM {table} WHERE {condition}'
 			
-		try:
-			df = pd.read_sql(query, self.connection,index_col='index')
-		except :
-			df = pd.read_sql(query, self.connection)
-		
+		df = pd.read_sql(query, self.connection,index_col='index')
+
 		try:
 			df.index = [datetime.fromisoformat(i) for i in df.index ]
-			df.index = pd.to_datetime(df.index)
-		except:
-			pass
+		finally:
+			return df
 
-		return df
+		
 	def save_inference_to_DB():
 		pass
 	

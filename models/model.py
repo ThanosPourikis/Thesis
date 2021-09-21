@@ -9,14 +9,13 @@ def get_model_results(data,params,name,model, validation_size=0.2):
 	# features = data.loc[:,data.columns!='SMP']
 	# data = data.set_index('Date')
 	if data.isnull().values.any():
+		export = pd.DataFrame(data['SMP'],data.index)
 		inference = data[-24:]
 		test = data[-(8*24):-24]
 		data = data[:-(8*24)]
 	else:
 		test = data[-(7*24):]
 		data = data[:-(7*24)]
-
-	name = name
 	features = data.loc[:,data.columns!='SMP']
 	labels = (data.loc[:,'SMP'])
 	model = model(**params)
@@ -27,19 +26,19 @@ def get_model_results(data,params,name,model, validation_size=0.2):
 	logging.info(f'Fitting {name} Model')
 
 	model.fit(x_train,y_train)
-	
+
+	train = model.predict(x_train)
+	val = model.predict(x_validate)
 	pred = model.predict(test.loc[:,test.columns != 'SMP'])
-
 	metrics = get_metrics_df(
-		y_train,model.predict(x_train),
-		y_validate,model.predict(x_validate),
+		y_train,train,
+		y_validate,val,
 		test.loc[:,'SMP'],pred)
-	test['Prediction'] = pred
-	try:
-		inference['Inference'] = model.predict(inference.loc[:,inference.columns != 'SMP'])
-		test = pd.concat([test,inference['Inference']],axis=1)
-		return test.iloc[:,-3:],metrics
-	except:
-		return test.iloc[:,-2:],metrics
 
-		
+	export['Training'] = pd.DataFrame(train,index=x_train.index)
+	export['Validation'] = pd.DataFrame(val,index=x_validate.index)
+	export['Testing'] = pd.DataFrame(pred,index=test.index)
+	try:
+		export['Inference'] = pd.DataFrame(model.predict(inference.loc[:,inference.columns != 'SMP']),index=inference.index)
+	finally:
+		return export,metrics
