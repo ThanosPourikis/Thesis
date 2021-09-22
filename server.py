@@ -12,8 +12,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from xgboost import XGBRegressor
 from models.lstm.Lstm_model import LSTM
-from models.lstm.Hybrid_Lstm_model import Hybrid_LSTM
-from sklearn.model_selection import train_test_split
 from models.utils import get_metrics_df
 
 
@@ -42,7 +40,7 @@ def save_infernce(dataset_name):
 		df['KnnModel'] = db.get_data('"index","Inference"','KnnModel').dropna()
 		df['XgbModel'] = db.get_data('"index","Inference"','XgbModel').dropna()
 		df['Lstm'] = db.get_data('"index","Inference"','Lstm').dropna()
-		df['Hybrid_Lstm'] = db.get_data('"index","Inference"','Hybrid_Lstm').dropna()
+		df['Hybrid'] = db.get_data('"index","Inference"','Hybrid').dropna()
 		try:
 			df = pd.concat([db.get_data('*','infernce'),df])
 			df = df.reset_index().drop_duplicates(subset='index').set_index('index')
@@ -53,26 +51,30 @@ def save_infernce(dataset_name):
 		return 'No Prediction Possible'
 		
 logging.basicConfig(filename='log.log',level=logging.DEBUG)
+
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 database_in = 'dataset'
+models = [LinearRegression,KNeighborsRegressor,XGBRegressor,LSTM]
+model_names = ['Linear','KnnModel','XgbModel']
+params = ['linear_params','knn_params','xgb_params']
+
 try: 
 	with open ('yaml.yaml', 'r') as file:
-		params = yaml.safe_load(file)
+		params_list = yaml.safe_load(file)
 except Exception as e:
 	print(e)
 
-# update()
+update(True)
 db_in =DB(database_in)
 threads = []
 for dataset_name in datasets:
-	# save_infernce(dataset_name)
-	prediction = db_in.get_data('*',dataset_name)
-	prediction.insert(prediction.shape[1]-1,'lag_24',prediction['SMP'].shift(24))
-	prediction = prediction[prediction['lag_24'].notna()]
-	threading.Thread(target=train_model,args = (LinearRegression,'Linear',prediction,dataset_name,params['linear_params'],)).start()
-	threading.Thread(target=train_model,args = (KNeighborsRegressor,'KnnModel',prediction,dataset_name,params['knn_params'],)).start()
-	threading.Thread(target=train_model,args = (XGBRegressor,'XgbModel',prediction,dataset_name,params['xgb_params'],)).start()
-	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',prediction,dataset_name,params['Lstm_params'],)))
+	save_infernce(dataset_name)
+	dataset = db_in.get_data('*',dataset_name)
+	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
+	dataset = dataset[dataset['lag_24'].notna()]
+	for model,model_name,param in zip(models,model_names,params):
+		threads.append(threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)))
+	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
 
 for i in threads:
 	i.start()
@@ -90,7 +92,7 @@ for i in datasets:
 
 	smp = linear['SMP']
 
-	train = pd.concat([linear['Training'].dropna(),knn['Training'].dropna(),xgb['Training'].dropna(),lstm['Training'].dropna()],
+	train = pd.concat([linear['Training'].dropna(),xgb['Training'].dropna(),lstm['Training'].dropna()],
 	axis=1).mean(axis=1)
 	val = pd.concat([linear['Validation'].dropna(),knn['Validation'].dropna(),xgb['Validation'].dropna(),lstm['Validation'].dropna()],
 	axis=1).mean(axis=1)

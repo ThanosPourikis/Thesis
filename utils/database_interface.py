@@ -23,7 +23,10 @@ class DB:
 		else:
 			query = f'SELECT {columns} FROM {table} WHERE {condition}'
 			
-		df = pd.read_sql(query, self.connection,index_col='index')
+		try:
+			df = pd.read_sql(query, self.connection,index_col='index')
+		except :
+			df = pd.read_sql(query, self.connection)
 
 		try:
 			df.index = [datetime.fromisoformat(i) for i in df.index ]

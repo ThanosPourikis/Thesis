@@ -18,13 +18,12 @@ datasets = ['requirements','requirements_units','requirements_weather','requirem
 datasets_dict = {'requirements':'requirements','requirements_units':'requirements_units',
 'requirements_weather':'requirements_weather','requirements_units_weather':'requirements_units_weather'}
 
-models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid_Lstm']
+models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid']
 # dataset = 'requirements'
 # database = 'requirements_units'
 
 @app.route('/Api/<route>')
 def api(route):
-
 
 	if route =='datasets':
 		return pd.DataFrame(datasets)[0].to_json()
