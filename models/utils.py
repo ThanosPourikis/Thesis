@@ -19,7 +19,7 @@ def get_metrics_df(y_train,y_train_pred,y_val,y_val_pred,y_test,y_test_pred):
 		"Train" : rmse(y_train,y_train_pred),
 		"Validation" : rmse(y_val,y_val_pred),
 		"Test" : rmse(y_test,y_test_pred),
-	},index=['MSE']))
+	},index=['RMSE']))
 
 	metrics = metrics.append(pd.DataFrame({
 		"Train" : r2_score(y_train,y_train_pred),

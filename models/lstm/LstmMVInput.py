@@ -5,7 +5,7 @@ import time
 import numpy as np
 from torch.nn import L1Loss
 from torch.optim import Adam
-from torch import from_numpy,Tensor
+from torch import Tensor
 
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
@@ -14,7 +14,6 @@ import copy
 from models.utils import get_metrics_df
 from torch.utils.data import DataLoader
 from models.lstm.utils import RequirementsSample, sliding_windows
-from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
 
 ### TODO Add Hybrid Code
