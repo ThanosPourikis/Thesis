@@ -26,9 +26,9 @@ models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid']
 def api(route):
 
 	if route =='datasets':
-		return pd.DataFrame(datasets)[0].to_json()
+		return pd.DataFrame(datasets)[0].to_dict()
 	elif route == 'models':
-		return pd.DataFrame(models)[0].to_json()
+		return pd.DataFrame(models)[0].to_dict()
 	elif route == 'docs':
 		return render_template('api.jinja',datasets= datasets,models = models)
 
@@ -90,7 +90,7 @@ def prices_api(dataset):
 		df = pd.DataFrame()
 		for model in models:
 			df[model] = db.get_data('"index","Inference"',model).dropna()
-		return df.reset_index(drop=True).to_json()
+		return df.reset_index(drop=True).to_dict()
 	except:
 		return 'No Prediction Possible'
 
@@ -99,12 +99,12 @@ def metrics_api(dataset,model):
 	db = DB(datasets_dict[dataset])
 	try : 
 		if model == 'all':
-			df = {}
+			dict = {}
 			for model in models:
-				df[model] = get_metrics(model,db).loc[:,['Train','Validation','Test']].to_dict()
-			return df
+				dict[model] = get_metrics(model,db).loc[:,['Train','Validation','Test']].to_dict()
+			return dict
 		else:
-			return get_metrics(model,db).to_json()
+			return get_metrics(model,db).to_dict()
 	except:
 		return "WRONG"
 
