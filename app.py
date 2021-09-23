@@ -67,18 +67,17 @@ def page_for_ml_model(dataset,name):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('"index","SMP","Testing","Inference"',name,f'"index" > "{week}"')
 	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
+	metrics = get_metrics(name,db)
 	
 	if 'Lstm' in name:
 		hist = db.get_data('*',f'hist_{name}')
-		metrics = get_metrics(name,db)
-		return render_template('lstm.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
+		return render_template('lstm.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,
 							hist_json = get_json_for_line_scatter(hist,hist.columns,metrics.iloc[0]['best_epoch']),dataset = dataset)
 	else:
-		metrics = get_metrics(name,db)
 
-		return render_template('model.jinja', title = f'{name} Model {dataset} Dataset Last 7days Prediction vs Actual Price And Inference',
+		return render_template('model.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Dataset Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							metrics = metrics,dataset = dataset)
 
