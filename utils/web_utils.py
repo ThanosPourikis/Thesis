@@ -67,3 +67,16 @@ def get_heatmap(df):
 	fig = go.Figure(data=[heatmap])
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+def get_table(df):
+	df = df.round(4).reset_index()
+	df.columns.values[0] = 'Metric'
+	fig = go.Figure(data=[go.Table(
+    header=dict(values=list(df.columns),
+                fill_color='paleturquoise',
+                align='left'),
+    cells=dict(values=[df[i] for i in df],
+               fill_color='lavender',
+               align='left'))
+	])
+	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+

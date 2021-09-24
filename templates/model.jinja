@@ -9,26 +9,11 @@
 		Plotly.plot('chart_json', graph, {});
 	</script>
 
-	<table class="table">
-	{% for i in metrics.index %}
-		<thead>
-			<tr>
-				<th>Train {{i}}</th>
-				<th>Validation {{i}}</th>
-				<th>Test {{i}}</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td scope="row">{{metrics.loc[i,'Train']}}</td>
-				<td>{{metrics.loc[i,'Validation']}}</td>
-				<td>{{metrics.loc[i,'Test']}}</td>
-			</tr>
-		</tbody>
-	{% endfor %}
-
-	</table>
-
+	<div id="table" style="margin-top: -50px;"></div>
+	<script>
+		var graph1 = {{ table | safe }};
+		Plotly.plot('table', graph1, {});
+	</script>
 	{{ model }}
 	{% block more_data %}
 	{% endblock more_data %}

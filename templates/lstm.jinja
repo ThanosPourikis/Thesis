@@ -1,6 +1,6 @@
 {% extends "model.jinja" %}
 {% block more_data %}
-<div id="hist_json"></div>
+<div id="hist_json" style="margin-top: -250px;"></div>
 <script>
 	var graph = {{ hist_json | safe }};
 	Plotly.plot('hist_json', graph, {});

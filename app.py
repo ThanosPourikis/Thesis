@@ -73,13 +73,13 @@ def page_for_ml_model(dataset,name):
 		hist = db.get_data('*',f'hist_{name}')
 		return render_template('lstm.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics,
+							table = get_table(metrics),
 							hist_json = get_json_for_line_scatter(hist,hist.columns,metrics.iloc[0]['best_epoch']),dataset = dataset)
 	else:
 
 		return render_template('model.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
-							metrics = metrics,dataset = dataset)
+							table = get_table(metrics),dataset = dataset)
 
 
 @app.route('/prices_api/<dataset>')
