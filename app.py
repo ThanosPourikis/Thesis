@@ -67,7 +67,7 @@ def page_for_ml_model(dataset,name):
 	db = DB(datasets_dict[dataset])
 	df = db.get_data('"index","SMP","Testing","Inference"',name,f'"index" > "{week}"')
 	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
-	metrics = get_metrics(name,db)
+	metrics = db.get_metrics(name)
 	
 	if 'Lstm' in name:
 		hist = db.get_data('*',f'hist_{name}')
@@ -100,10 +100,10 @@ def metrics_api(dataset,model):
 		if model == 'all':
 			dict = {}
 			for model in models:
-				dict[model] = get_metrics(model,db).loc[:,['Train','Validation','Test']].to_dict()
+				dict[model] = db.get_metrics(model).loc[:,['Train','Validation','Test']].to_dict()
 			return dict
 		else:
-			return get_metrics(model,db).to_dict()
+			return db.get_metrics(model,db).to_dict()
 	except:
 		return "WRONG"
 

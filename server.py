@@ -19,7 +19,7 @@ def train_model(model,model_name,df,dataset_name,params):
 	prediction,metrics = get_model_results(df,params[dataset_name],model_name,model)
 	db_out = DB(dataset_name)
 	db_out.save_df_to_db(prediction,model_name)
-	utils.save_metrics(metrics,model_name,db_out)
+	db_out.save_metrics(metrics,model_name)
 
 def Lstm(LSTM,name,df,dataset_name,params):
 	lstm = LstmMVInput(utils.MAE,df,name = f'{name} {dataset_name}',LSTM = LSTM,**params)
@@ -30,7 +30,7 @@ def Lstm(LSTM,name,df,dataset_name,params):
 	db_out.save_df_to_db(hist,f'hist_{name}')
 	db_out.save_df_to_db(prediction,name)
 	metrics['best_epoch'] = best_epoch
-	utils.save_metrics(metrics,name,db_out)
+	db_out.save_metrics(metrics,name)
 
 def save_infernce(dataset_name):
 	try:
@@ -64,42 +64,43 @@ try:
 except Exception as e:
 	print(e)
 
-update(True)
-db_in =DB(database_in)
-threads = []
-for dataset_name in datasets:
-	save_infernce(dataset_name)
-	dataset = db_in.get_data('*',dataset_name)
-	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
-	dataset = dataset[dataset['lag_24'].notna()]
-	for model,model_name,param in zip(models,model_names,params):
-		threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
-	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
+# update(True)
+# db_in =DB(database_in)
+# threads = []
+# for dataset_name in datasets:
+# 	save_infernce(dataset_name)
+# 	dataset = db_in.get_data('*',dataset_name)
+# 	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
+# 	dataset = dataset[dataset['lag_24'].notna()]
+# 	for model,model_name,param in zip(models,model_names,params):
+# 		threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
+# 	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
 
-for i in threads:
-	i.start()
+# for i in threads:
+# 	i.start()
 
-for i in threads:
-	i.join()
+# for i in threads:
+# 	i.join()
 
-print("Help")
-for i in datasets:
-	db=DB(i)
-	linear =db.get_data('*','Linear')
-	knn = db.get_data('*','KnnModel')
-	xgb = db.get_data('*','XgbModel')
-	lstm = db.get_data('*','Lstm')
+model_names.append('LSTM')
 
-	smp = linear['SMP']
+for dataset in datasets:
+	db=DB(dataset)
+	data = {}
+	for i in model_names:
+		data[i] = db.get_data('*',i)
 
-	train = pd.concat([linear['Training'].dropna(),xgb['Training'].dropna(),lstm['Training'].dropna()],
-	axis=1).mean(axis=1)
-	val = pd.concat([linear['Validation'].dropna(),knn['Validation'].dropna(),xgb['Validation'].dropna(),lstm['Validation'].dropna()],
-	axis=1).mean(axis=1)
-	test = pd.concat([linear['Testing'].dropna(),knn['Testing'].dropna(),xgb['Testing'].dropna(),lstm['Testing'].dropna()],
-	axis=1).mean(axis=1)
-	inf = pd.concat([linear['Inference'].dropna(),knn['Inference'].dropna(),xgb['Inference'].dropna(),lstm['Inference'].dropna()],
-	axis=1).mean(axis=1)
+	smp = data['Linear']['SMP']
+
+	val = pd.concat([data[i]['Validation'].dropna() for i in data],axis=1).mean(axis=1)
+
+	test = pd.concat([data[i]['Testing'].dropna() for i in data],axis=1).mean(axis=1)
+
+	inf =  pd.concat([data[i]['Inference'].dropna() for i in data],axis=1).mean(axis=1)
+
+	data.pop('KnnModel',None)
+	train = pd.concat([data[i]['Training'].dropna() for i in data],axis=1).mean(axis=1)
+
 	prediction = pd.concat([smp,train,val,test,inf],axis=1)
 	prediction.columns=['SMP','Training','Validation','Testing','Inference']
 
@@ -108,7 +109,7 @@ for i in datasets:
 	prediction.loc[:,['SMP','Testing']].dropna()['SMP'],prediction['Testing'].dropna())
 
 	prediction,metrics
-	db_out = DB(i)
+	db_out = DB(dataset)
 
 	db_out.save_df_to_db(prediction,'Hybrid')
-	utils.save_metrics(metrics,'Hybrid',db_out)
+	db_out.save_metrics(metrics,'Hybrid')

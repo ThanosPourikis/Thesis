@@ -29,15 +29,3 @@ def check_data_integrity(df):
 	for i in range(len(df)-1):
 		if date_con(df[i]) + delt != date_con(df[i+1]):
 			print (f'Error at {df[i]}')
-
-def save_metrics(metrics,model,db):
-	try:
-		# metrics = pd.concat([metrics,db.get_data('*',f'metrics_{model}')])
-		# metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
-		db.save_df_to_db(metrics,f'metrics_{model}')
-	except:
-		metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
-		db.save_df_to_db(metrics,f'metrics_{model}')
-
-
-

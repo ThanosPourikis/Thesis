@@ -26,11 +26,6 @@ def get_json_for_fig_scatter(df,y,x):
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
-def get_metrics(model,db):
-	metrics = db.get_data('*',f'metrics_{model}')
-	# metrics.index = pd.to_datetime(metrics.index)
-	return metrics
-
 
 def get_candlesticks(df):
 	export = pd.DataFrame()

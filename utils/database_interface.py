@@ -36,4 +36,16 @@ class DB:
 		
 	def save_inference_to_DB():
 		pass
-	
+	def get_metrics(self,model):
+		metrics = self.get_data('*',f'metrics_{model}')
+		# metrics.index = pd.to_datetime(metrics.index)
+		return metrics
+		
+	def save_metrics(self,metrics,model):
+		try:
+			# metrics = pd.concat([metrics,db.get_data('*',f'metrics_{model}')])
+			# metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
+			self.save_df_to_db(metrics,f'metrics_{model}')
+		except:
+			metrics = metrics.reset_index().drop_duplicates(subset ='index',keep='first').set_index('index')
+			self.save_df_to_db(metrics,f'metrics_{model}')
