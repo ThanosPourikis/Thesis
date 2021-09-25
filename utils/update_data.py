@@ -10,15 +10,15 @@ import config
 def update(new_data):
 	db = DB('dataset')
 	try:
-		start_date = db.get_data('MAX("index")','isp1').values[0,0]
-		req = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
-		req = pd.concat([db.get_data('*','isp1'),req])
+		start_date = db.get_data('MAX("index")','requirements').values[0,0]
+		requirements = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
+		requirements = pd.concat([db.get_data('*','requirements'),requirements])
 	except:
 		start_date = '2020-11-01'
-		req = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
+		requirements = get_isp_data(get_excel_data(folder_path=config.ISP1['folder_path'],filetype=config.ISP1['filetype'],start_date = start_date))
 
-	req.to_csv('datasets/requirements.csv')
-	db.save_df_to_db(dataframe=req.copy(),df_name='isp1')
+	requirements.to_csv('datasets/requirements.csv')
+	db.save_df_to_db(dataframe=requirements.copy(),df_name='requirements')
 
 	try:
 		start_date = db.get_data('MAX("index")','units').values[0,0]
@@ -44,27 +44,14 @@ def update(new_data):
 
 
 
-	dataset = req.join(Smp)
-	db.save_df_to_db(dataframe=dataset,df_name='requirements')
-	
-	dataset = req.join(units).join(Smp)
-	db.save_df_to_db(dataframe=dataset,df_name='requirements_units')
-
-	dataset = req.join(weather).join(Smp)
-	db.save_df_to_db(dataframe=dataset,df_name='requirements_weather')
-
-	dataset = req.join(units).join(weather).join(Smp)
-	db.save_df_to_db(dataframe=dataset,df_name='requirements_units_weather')
-
-
 	db = DB('requirements')
-	db.save_df_to_db(dataframe=req.join(Smp)[-7*24:],df_name='requirements')
+	db.save_df_to_db(dataframe=requirements.join(Smp),df_name='requirements')
 
 	db = DB('requirements_units')
-	db.save_df_to_db(dataframe=req.join(units).join(Smp)[-7*24:],df_name='requirements_units')
+	db.save_df_to_db(dataframe=requirements.join(units).join(Smp),df_name='requirements_units')
 
 	db = DB('requirements_weather')
-	db.save_df_to_db(dataframe=req.join(weather).join(Smp)[-7*24:],df_name='requirements_weather')
+	db.save_df_to_db(dataframe=requirements.join(weather).join(Smp),df_name='requirements_weather')
 
 	db = DB('requirements_units_weather')
-	db.save_df_to_db(dataframe=req.join(units).join(weather).join(Smp)[-7*24:],df_name='requirements_units_weather')
+	db.save_df_to_db(dataframe=requirements.join(units).join(weather).join(Smp),df_name='requirements_units_weather')

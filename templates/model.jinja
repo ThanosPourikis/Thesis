@@ -1,8 +1,6 @@
 {% extends "base.jinja" %}
 {% block content %}
 	<h1>{{title}}</h1>
-	
-
 	<div id="chart_json"></div>
 	<script>
 		var graph = {{ chart_json | safe }};

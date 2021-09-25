@@ -1,19 +1,13 @@
-import flask
-from flask import render_template,Flask
+import re
+from flask import render_template,Flask,jsonify,request
 from werkzeug.utils import redirect
 
 from utils.database_interface import DB
 from utils.web_utils import *
-from datetime import date, timedelta
 import pandas as pd
-from pytz import timezone
 
-
-localTz = timezone('CET')
 
 app = Flask(__name__, static_url_path='', static_folder='static', template_folder='templates')
-today = pd.to_datetime(date.today())
-week = str(localTz.localize(today - timedelta(weeks=1)))
 datasets = ['requirements','requirements_units','requirements_weather','requirements_units_weather']
 datasets_dict = {'requirements':'requirements','requirements_units':'requirements_units',
 'requirements_weather':'requirements_weather','requirements_units_weather':'requirements_units_weather'}
@@ -26,9 +20,9 @@ models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid']
 def api(route):
 
 	if route =='datasets':
-		return pd.DataFrame(datasets)[0].to_dict()
+		return jsonify(pd.DataFrame(datasets)[0].to_dict())
 	elif route == 'models':
-		return pd.DataFrame(models)[0].to_dict()
+		return jsonify(pd.DataFrame(models)[0].to_dict())
 	elif route == 'docs':
 		return render_template('api.jinja',datasets= datasets,models = models)
 
@@ -40,33 +34,41 @@ def home():
 def api_redict():
 	return redirect('Api/docs')
 
-@app.route('/Dataset/<dataset>')
+@app.route('/Dataset/<dataset>',methods = ['GET'])
 def index(dataset):
 	db = DB(datasets_dict[dataset])
-	df = db.get_data('*', dataset,f'"index" > "{week}"')
+	start_date,end_date = get_dates(request.args)
+	df = db.get_data('*', dataset,f'"index" < "{end_date}"and "index" > "{start_date}"')
+
 	if 'units' in dataset:
 		heatmap = get_heatmap(df.iloc[:,7:-7 if 'cloudCover' in df.columns else -1])
 		df = df.drop(axis = 1,columns = df.iloc[:,6:-7 if 'cloudCover' in df.columns else -1])
 	else:
 		heatmap = None
 	return render_template('home.jinja',title = f'Train Data For {dataset} Dataset For The Past 7 Days',
-	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),dataset = dataset,heatmap = heatmap)
+	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),
+	dataset = dataset,heatmap = heatmap,start_date = start_date,end_date = end_date)
 
-@app.route('/Correlation/<dataset>')
+@app.route('/Correlation/<dataset>',methods = ['GET'])
 def corrolations(dataset):
 	db = DB(datasets_dict[dataset])
-	df = db.get_data('*', dataset,f'"index" > "{week}"')
+	start_date,end_date = get_dates(request.args)
+	df = db.get_data('*', dataset,f'"index" <= "{end_date}"and "index" >= "{start_date}"')
 	if 'units' in dataset:
 		df = df.drop(axis = 1,columns =df.iloc[:,6:-7 if 'cloudCover' in df.columns else -1])
 	df = df.set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = f'Correlation For {dataset} Dataset For The Past 7 Days',
-	df=df,get_json = get_json_for_fig_scatter,dataset = dataset)
+	df=df,get_json = get_json_for_fig_scatter,dataset = dataset,start_date = start_date,end_date = end_date)
 
-@app.route('/<name>/<dataset>')
+@app.route('/<name>/<dataset>',methods = ['GET'])
 def page_for_ml_model(dataset,name):
+
+	start_date,end_date = get_dates(request.args)
+
+
 	db = DB(datasets_dict[dataset])
-	df = db.get_data('"index","SMP","Testing","Inference"',name,f'"index" > "{week}"')
-	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce')
+	df = db.get_data('*',name,f'"index" <= "{end_date}" and "index" >= "{start_date}"')
+	df['Previous Prediction'] = db.get_data(f'"index","{name}"','infernce',f'"index" <= "{end_date}" and "index" >= "{start_date}"')
 	metrics = db.get_metrics(name)
 	
 	if 'Lstm' in name:
@@ -74,12 +76,13 @@ def page_for_ml_model(dataset,name):
 		return render_template('lstm.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							table = get_table(metrics),
-							hist_json = get_json_for_line_scatter(hist,hist.columns,metrics.iloc[0]['best_epoch']),dataset = dataset)
+							hist_json = get_json_for_line_scatter(hist,hist.columns,metrics.iloc[0]['best_epoch']),
+							dataset = dataset,start_date = start_date,end_date = end_date)
 	else:
 
 		return render_template('model.jinja', title = f'Model: {name} <br>Dataset: {dataset} <br> Last 7days Prediction vs Actual Price And Inference',
 							chart_json = get_json_for_line_scatter(df,df.columns),
-							table = get_table(metrics),dataset = dataset)
+							table = get_table(metrics),dataset = dataset,start_date = start_date,end_date = end_date)
 
 
 @app.route('/prices_api/<dataset>')
@@ -89,7 +92,7 @@ def prices_api(dataset):
 		df = pd.DataFrame()
 		for model in models:
 			df[model] = db.get_data('"index","Inference"',model).dropna()
-		return df.reset_index(drop=True).to_dict()
+		return jsonify(df.reset_index(drop=True).to_dict())
 	except:
 		return 'No Prediction Possible'
 
@@ -101,9 +104,9 @@ def metrics_api(dataset,model):
 			dict = {}
 			for model in models:
 				dict[model] = db.get_metrics(model).loc[:,['Train','Validation','Test']].to_dict()
-			return dict
+			return jsonify(dict)
 		else:
-			return db.get_metrics(model,db).to_dict()
+			return jsonify(db.get_metrics(model).to_dict())
 	except:
 		return "WRONG"
 

@@ -2,6 +2,10 @@ import plotly
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
+from datetime import date, timedelta
+from pytz import timezone
+
+localTz = timezone('CET')
 
 import json
 
@@ -75,3 +79,16 @@ def get_table(df):
 	])
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+def get_dates(form=''):
+
+	if 'end_date' in form : 
+		end_date = form['end_date'] 
+	else :
+		end_date = str(pd.to_datetime(date.today() + timedelta(days=2)))[:10]
+
+	if 'start_date' in form : 
+		start_date = form['start_date']
+	else: 
+		start_date = str(localTz.localize(pd.to_datetime(date.today()) - timedelta(weeks=1)))[:10]
+
+	return start_date,end_date
