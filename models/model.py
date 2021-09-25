@@ -8,8 +8,8 @@ from models.utils import get_metrics_df
 def get_model_results(data,params,name,model, validation_size=0.2):
 	# features = data.loc[:,data.columns!='SMP']
 	# data = data.set_index('Date')
+	export = pd.DataFrame(data['SMP'],data.index)
 	if data.isnull().values.any():
-		export = pd.DataFrame(data['SMP'],data.index)
 		inference = data[-24:]
 		test = data[-(8*24):-24]
 		data = data[:-(8*24)]

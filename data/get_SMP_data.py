@@ -1,17 +1,25 @@
 from data.get_SMP_files import get_SMP_files
-from datetime import timedelta
+from datetime import timedelta,datetime
 from os import listdir
-import time
 import pandas as pd
 from pytz import timezone
 
-def get_SMP_data(new_files = True):
-	if new_files:
-		get_SMP_files()
-		
-	localTz = timezone('CET')
-	folder_path = 'smp_files/'
-	files = [f for f in listdir(folder_path)]
+localTz = timezone('CET')
+dt = localTz.localize(datetime.now())
+folder_path = 'smp_files/'
+
+def get_SMP_data(start_date = None):
+	get_SMP_files()
+	files = []
+	if  start_date == None:
+		files = [f for f in listdir(folder_path)]
+	else:
+		start_date = datetime.fromisoformat(start_date)
+		days = (dt - start_date).days
+		for i in range(days):
+			date = start_date + timedelta(days=i)
+			files.append(f"{str(date)[:10].replace('-','')}_EL-DAM_ResultsSummary_EN_v01.xlsx")
+
 	export = pd.DataFrame()
 	for name in files:
 		try:
@@ -34,13 +42,14 @@ def get_SMP_data(new_files = True):
 				export = pd.concat([export,temp])
 		except:
 			print('Not xlsx File')
-
-	export.columns = ['SMP']
-	export = pd.to_numeric(export['SMP'])
-	export = export.sort_index()
-	export.to_csv('datasets/SMP.csv')
-	return export
-	
+	try:
+		export.columns = ['SMP']
+		export = pd.to_numeric(export['SMP'])
+		export = export.sort_index()
+		export.to_csv('datasets/SMP.csv')
+		return pd.DataFrame(export)
+	except:
+		 return pd.DataFrame()
 
 # pool = Pool()
 # pool.map(read_xlsx, files)

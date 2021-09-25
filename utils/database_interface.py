@@ -45,29 +45,19 @@ class DB:
 		finally:
 			return df
 			
-	def get_dataset(self, columns, tables, condition = None,join = None):
+	def get_dataset(self, columns, tables):
 		tables_list = tables.split('_')
 		tables = tables_list.pop(0)
-		# if len(tables_list) > 1:
 		for i in tables_list:
 			tables += f' INNER JOIN {i} USING("index")'
 
-		if condition == None:
-			query = f'SELECT {columns} FROM {tables}'
-		elif not condition == None:
-			query = f'SELECT {columns} FROM {tables} WHERE {condition}'
-		elif not join == None:
-			query = f'SELECT {columns} FROM {tables} INNER JOIN {join}'
+		query = f'SELECT {columns} FROM {tables}'
 
-		try:
-			df = pd.read_sql(query, self.connection,index_col='index')
-		except :
-			df = pd.read_sql(query, self.connection)
+		df = pd.read_sql(query, self.connection,index_col='index')
+		df.index = [datetime.fromisoformat(i) for i in df.index ]
+		df = df.join(self.get_data('*','smp'))
 
-		try:
-			df.index = [datetime.fromisoformat(i) for i in df.index ]
-		finally:
-			return df
+		return df
 
 	def get_metrics(self,model):
 		metrics = self.get_data('*',f'metrics_{model}')

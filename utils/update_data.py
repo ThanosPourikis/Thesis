@@ -7,7 +7,7 @@ from data.ADMHE_files import get_excel_data
 from data.get_weather_data import download_weather_data, get_weather_data,get_weather_mean
 import config
 
-def update(new_data):
+def update():
 	db = DB('dataset')
 	try:
 		start_date = db.get_data('MAX("index")','requirements').values[0,0]
@@ -34,13 +34,21 @@ def update(new_data):
 	units.to_csv('datasets/units.csv')
 	db.save_df_to_db(dataframe=units.copy(),df_name='units')
 
-
 	download_weather_data()
 	weather =get_weather_mean()
 	db.save_df_to_db(dataframe=weather.copy(),df_name='weather')
 
-	Smp = get_SMP_data(new_data)
-	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
+	try:
+		start_date = db.get_data('MAX("index")','smp').values[0,0]
+		Smp = get_SMP_data(start_date)
+		Smp = pd.concat([db.get_data('*','smp'),Smp])
+		db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
+	except:
+		Smp = get_SMP_data()
+		db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
+
+
+	
 
 
 

@@ -64,11 +64,11 @@ try:
 except Exception as e:
 	print(e)
 
-# update(True)
+update()
 db_in =DB(database_in)
 threads = []
 for dataset_name in datasets:
-	# save_infernce(dataset_name)
+	save_infernce(dataset_name)
 	dataset = db_in.get_dataset('*',dataset_name)
 	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
 	dataset = dataset[dataset['lag_24'].notna()]

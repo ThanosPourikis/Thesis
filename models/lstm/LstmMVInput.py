@@ -30,8 +30,8 @@ class LstmMVInput:
 				 num_epochs,
 				 model = None):
 		# data = data.set_index('Date')
+		self.export = pd.DataFrame(data['SMP'],index=data.index)
 		if data.isnull().values.any():
-			self.export = pd.DataFrame(data['SMP'],index=data.index)
 			self.inference = data[-24:]
 			self.test = data[-(8*24):-24]
 			data = data[:-(8*24)]
@@ -136,23 +136,24 @@ class LstmMVInput:
 		train = self.model(x_train)
 		train = train.detach().numpy().reshape(-1,1)
 		train = scaler_l.inverse_transform(train)
-		self.export['Training'] = pd.DataFrame(train,index=self.y_train.index)
+		self.export = self.export.join(pd.DataFrame(train,index=self.y_train.index,columns=['Training']))
 
 		x_validate = scaler_f.transform(np.array(self.x_validate))
 		x_validate = Tensor(x_validate.reshape(1,-1,self.x_validate.shape[1]))
 		val = self.model(x_validate)
 		val = scaler_l.inverse_transform(val.detach().numpy().reshape(-1,1))
-		self.export['Validation'] =  pd.DataFrame(val,index=self.y_validate.index)
+		self.export = self.export.join(pd.DataFrame(val,index=self.y_validate.index,columns=['Validation']))
 
 		x_test,y_test = self.test.loc[:,self.test.columns != 'SMP'],self.test.loc[:,'SMP']
 		x_test = scaler_f.transform(np.array(x_test))
 		x_test = Tensor(x_test.reshape(1,-1,x_test.shape[1]))
 		test = self.model(x_test)
 		test = scaler_l.inverse_transform(test.detach().numpy().reshape(-1,1))
-		self.export['Testing'] =  pd.DataFrame(test,index=y_test.index)
+		self.export = self.export.join(pd.DataFrame(test,index=y_test.index,columns=['Testing']))
 
 		metrics = get_metrics_df(self.y_train,train,
-				self.y_validate,val,y_test,test)
+				self.y_validate,val,
+				y_test,test)
 		
 		try:
 			inference = self.inference.loc[:,self.inference.columns != 'SMP']
