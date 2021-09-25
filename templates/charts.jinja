@@ -1,8 +1,8 @@
 	{% for i in df.columns %}
-		<div class="col-xs-1-12">
-			<div class="card">
-				<div class="card-body">
-					<h3 class="card-title">{{i}}</h3>
+		<div class="col-xs-1-12 bg-dark text-primary">
+			<div class="card bg-dark text-primary">
+				<div class="card-body bg-dark text-primary">
+					<h3 class="card-title bg-dark text-primary">{{i}}</h3>
 					<div  id='{{i}}'>
 						<script>
 							var graph = {{ get_json(df[i],df.index,i) | safe }};

@@ -1,17 +1,35 @@
 {% extends "base.jinja" %}
 {% block content %}
-	<h1>{{title}}</h1>
+	<h2>{{title}}</h2>
 	<div id="chart_json"></div>
 	<script>
 		var graph = {{ chart_json | safe }};
 		Plotly.plot('chart_json', graph, {});
 	</script>
-
-	<div id="table" style="margin-top: -50px;"></div>
+	<table class="table text-primary">
+		<thead>
+			<tr>
+			{% for i in table.columns %}
+				<th>{{i}}</th>
+			{% endfor %}
+			</tr>
+		</thead>
+		<tbody>
+		{% for i in range(table.shape[0]) %}
+			<tr>
+			{% for j in table.iloc[i] %}
+				<td>{{j}}</td>
+			{% endfor %}
+			</tr>
+		{% endfor %}
+		
+		</tbody>
+	</table>
+	{# <div id="table" style="margin-top: -50px;"></div>
 	<script>
 		var graph1 = {{ table | safe }};
 		Plotly.plot('table', graph1, {});
-	</script>
+	</script> #}
 	{{ model }}
 	{% block more_data %}
 	{% endblock more_data %}

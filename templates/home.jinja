@@ -1,11 +1,11 @@
 {% extends 'base.jinja' %}
 {% block content %}
 	<h1>{{title}}</h1>
-	<div class="row">
-		<div class="col-xs-1-12">
-			<div class="card">
-				<div class="card-body">
-					<h3 class="card-title">Candlesticks</h3>
+	<div class="row bg-dark text-primary">
+		<div class="col-xs-1-12 bg-dark text-primary">
+			<div class="card bg-dark text-primary">
+				<div class="card-body bg-dark text-primary">
+					<h3 class="card-title bg-dark text-primary">Candlesticks</h3>
 					<div  id='candlestick'>
 						<script>
 							var graph = {{ candlestick}};

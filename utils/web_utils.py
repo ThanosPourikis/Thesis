@@ -2,20 +2,24 @@ import plotly
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
 from datetime import date, timedelta
 from pytz import timezone
+from flask import jsonify
 
+template = pio.templates['plotly_dark']
 localTz = timezone('CET')
 
 import json
 
 def get_json_for_line_fig(df,x,y):
-	fig = px.line(df,x=x,y=y)
+	fig = px.line(df,x=x,y=y,template=template)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 def get_json_for_line_scatter(df,y,line = None):
 	fig = go.Figure()
+	fig.update_layout(template=template)
 	for i in y:
 		fig.add_trace(go.Scatter(x=df.index, y=df[i],
 					mode='lines+markers',
@@ -26,7 +30,7 @@ def get_json_for_line_scatter(df,y,line = None):
 
 
 def get_json_for_fig_scatter(df,y,x):
-	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red')
+	fig = px.scatter(df,x=x,y=y,trendline="ols",trendline_color_override='red',template=template)
 	fig = fig.update_xaxes(rangeslider_visible=True)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder) 
 
@@ -43,12 +47,12 @@ def get_candlesticks(df):
 		temp['close'] = df[i:i+24].iloc[-1]
 		temp = temp.set_index('Date')
 		export = pd.concat([export,temp])
-
-	fig = go.Figure()
-	fig = go.Figure(data=[go.Candlestick(x=export.index,
+		candlestick = go.Candlestick(x=export.index,
 				open=export['open'], high=export['high'],
 				low=export['low'], close=export['close'])
-					 ])
+					 
+	fig = go.Figure(data=[candlestick])
+	fig.update_layout(template = template)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 def get_heatmap(df):
@@ -64,20 +68,13 @@ def get_heatmap(df):
 		y = units_24_trans.index
 	)
 	fig = go.Figure(data=[heatmap])
+	fig.update_layout(template = template)
 	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 def get_table(df):
 	df = df.round(4).reset_index()
 	df.columns.values[0] = 'Metric'
-	fig = go.Figure(data=[go.Table(
-    header=dict(values=list(df.columns),
-                fill_color='paleturquoise',
-                align='left'),
-    cells=dict(values=[df[i] for i in df],
-               fill_color='lavender',
-               align='left'))
-	])
-	return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+	return df
 
 def get_dates(form=''):
 
