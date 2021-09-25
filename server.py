@@ -64,23 +64,23 @@ try:
 except Exception as e:
 	print(e)
 
-# update(True)
-# db_in =DB(database_in)
-# threads = []
-# for dataset_name in datasets:
-# 	save_infernce(dataset_name)
-# 	dataset = db_in.get_data('*',dataset_name)
-# 	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
-# 	dataset = dataset[dataset['lag_24'].notna()]
-# 	for model,model_name,param in zip(models,model_names,params):
-# 		threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
-# 	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
+update(True)
+db_in =DB(database_in)
+threads = []
+for dataset_name in datasets:
+	save_infernce(dataset_name)
+	dataset = db_in.get_data('*',dataset_name)
+	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
+	dataset = dataset[dataset['lag_24'].notna()]
+	for model,model_name,param in zip(models,model_names,params):
+		threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
+	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
 
-# for i in threads:
-# 	i.start()
+for i in threads:
+	i.start()
 
-# for i in threads:
-# 	i.join()
+for i in threads:
+	i.join()
 
 model_names.append('LSTM')
 
