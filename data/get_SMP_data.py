@@ -5,7 +5,7 @@ import pandas as pd
 from pytz import timezone
 
 localTz = timezone('CET')
-dt = localTz.localize(datetime.now())
+dt = localTz.localize(datetime.now())  + timedelta(days = 1)
 folder_path = 'smp_files/'
 
 def get_SMP_data(start_date = None):
