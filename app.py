@@ -85,14 +85,29 @@ def page_for_ml_model(dataset,name):
 							table = get_table(metrics),dataset = dataset,start_date = start_date,end_date = end_date)
 
 
-@app.route('/prices_api/<dataset>')
-def prices_api(dataset):
+@app.route('/current_prediction/<dataset>')
+def current_prediction(dataset):
 	try:
 		db = DB(datasets_dict[dataset])
 		df = pd.DataFrame()
 		for model in models:
 			df[model] = db.get_data('"index","Inference"',model).dropna()
-		return jsonify(df.reset_index(drop=True).to_dict())
+		df.index = df.index.astype(str)
+		return jsonify(df.to_dict())
+	except:
+		return 'No Prediction Possible'
+
+@app.route('/previous_prediction/<dataset>',methods = ['GET'])
+def previous_prediction(dataset):
+	try:
+		db = DB(datasets_dict[dataset])
+		df = pd.DataFrame()
+		start_date,end_date = get_dates(request.args)
+
+		for model in models:
+			df[model] = db.get_data(f'"index","{model}"','infernce',f'"index" <= "{end_date}" and "index" >= "{start_date}"')
+		df.index = df.index.astype(str)
+		return jsonify(df.dropna().to_dict())
 	except:
 		return 'No Prediction Possible'
 

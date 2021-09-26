@@ -3,14 +3,25 @@
 <h2>Get current Metrics</h2>
 <div>Call metrics api by /metrics_api/{dataset}/{model}</div>
 <h3>You can find All API end Points Below</h3>
-<h1>Price API</h1>
+<h1>Current prediction</h1>
 		<div class="card">
 		<div class="card-body">
 			<a href="/Api/datasets" class="card-link"><h4 class="card-title">Datasets</h4></a>
 		</div>
 		<div class="card-body">
 			{% for i in datasets %}
-				<a href="/prices_api/{{i}}" class="card-link">{{i}}</a>
+				<a href="/current_prediction/{{i}}" class="card-link">{{i}}</a>
+			{% endfor %}
+			</div>
+		</div>
+<h1>previous_prediction</h1>
+		<div class="card">
+		<div class="card-body">
+			<a href="/Api/datasets" class="card-link"><h4 class="card-title">Datasets</h4></a>
+		</div>
+		<div class="card-body">
+			{% for i in datasets %}
+				<a href="/previous_prediction/{{i}}" class="card-link">{{i}}</a>
 			{% endfor %}
 			</div>
 		</div>
