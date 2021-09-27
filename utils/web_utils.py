@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from datetime import date, timedelta
 from pytz import timezone
-from flask import jsonify
 
 template = pio.templates['plotly_dark']
 localTz = timezone('CET')

@@ -1,6 +1,4 @@
 import datetime
-import math
-# from matplotlib import pyplot as plt
 import pandas as pd
 from data.get_weather_data import get_weather_data
 

@@ -1,7 +1,7 @@
 import sqlalchemy as sq
 import pandas as pd
 from pytz import timezone
-from datetime import datetime,timedelta
+from datetime import datetime
 # import config
 localTz = timezone('CET')
 sqlite = 'sqlite:///{}.db'

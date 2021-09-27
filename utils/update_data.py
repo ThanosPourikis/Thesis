@@ -4,7 +4,7 @@ from data.get_SMP_data import get_SMP_data
 from data.units_data import get_unit_data
 from data.isp_data import get_isp_data
 from data.ADMHE_files import get_excel_data
-from data.get_weather_data import download_weather_data, get_weather_data,get_weather_mean
+from data.get_weather_data import download_weather_data,get_weather_mean
 import config
 
 def update():
@@ -42,10 +42,11 @@ def update():
 		start_date = db.get_data('MAX("index")','smp').values[0,0]
 		Smp = get_SMP_data(start_date)
 		Smp = pd.concat([db.get_data('*','smp'),Smp])
-		db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 	except:
 		Smp = get_SMP_data()
-		db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
+	
+	Smp.to_csv('datasets/SMP.csv')
+	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 
 
 	
