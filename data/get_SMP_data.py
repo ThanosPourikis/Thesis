@@ -46,7 +46,6 @@ def get_SMP_data(start_date = None):
 		export.columns = ['SMP']
 		export = pd.to_numeric(export['SMP'])
 		export = export.sort_index()
-		export.to_csv('datasets/SMP.csv')
 		return pd.DataFrame(export)
 	except:
 		 return pd.DataFrame()

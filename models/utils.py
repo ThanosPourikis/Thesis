@@ -1,6 +1,5 @@
 from numpy import sqrt
-from sklearn.metrics._regression import mean_squared_error, mean_absolute_error,r2_score,mean_absolute_percentage_error
-from sklearn.preprocessing import Normalizer
+from sklearn.metrics._regression import mean_squared_error, mean_absolute_error,r2_score
 import pandas as pd
 from datetime import date
 

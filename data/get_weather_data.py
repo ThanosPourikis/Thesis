@@ -1,4 +1,3 @@
-from pandas._libs.tslibs.timestamps import Timestamp
 from  config import CITIES,DARK_SKY_KEY
 import requests
 import json

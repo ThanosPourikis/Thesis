@@ -1,5 +1,4 @@
 import numpy as np
-
 import torch
 
 # input shape = (batch_size, seq_len, features)

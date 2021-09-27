@@ -1,9 +1,6 @@
 
 from datetime import datetime,timedelta
-from os import path
-
 import pandas as pd
-
 from pytz import timezone
 
 localTz = timezone('CET')

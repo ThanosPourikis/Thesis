@@ -1,4 +1,3 @@
-import re
 from flask import render_template,Flask,jsonify,request
 from werkzeug.utils import redirect
 
