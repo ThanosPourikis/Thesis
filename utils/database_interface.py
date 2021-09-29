@@ -16,9 +16,6 @@ class DB:
 		except:
 			pass
 		dataframe.to_sql(df_name, self.connection, if_exists='replace')
-	
-	def save_inference_to_DB():
-		pass
 
 	def save_metrics(self,metrics,model):
 		try:

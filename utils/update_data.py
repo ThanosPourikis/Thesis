@@ -48,11 +48,6 @@ def update():
 	Smp.to_csv('datasets/SMP.csv')
 	db.save_df_to_db(dataframe=Smp.copy(),df_name='smp')
 
-
-	
-
-
-
 	db = DB('requirements')
 	db.save_df_to_db(dataframe=requirements.join(Smp),df_name='requirements')
 

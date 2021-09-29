@@ -1,4 +1,6 @@
 # Thesis
+<h2>Data Visualtion Platform and Electricity Price Prediction</h2>
+<h3>Using Sk-learn(Linear Regression,K-NN),XGBOOST,LSTM</h3>
 
 Data Visualtion
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/index.png)
@@ -12,5 +14,5 @@ Xgboost Model
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/XgBoost.png)
 Lstm Model
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/lstm.png)
-Hybrid Lstm Model
-![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/hybrid_lstm.png)
+Hybrid Model
+![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/hybrid.png)
