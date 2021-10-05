@@ -15,16 +15,7 @@ models = ['Linear','KnnModel','XgbModel','Lstm','Hybrid']
 # dataset = 'requirements'
 # database = 'requirements_units'
 
-@app.route('/Api/<route>')
-def api(route):
-
-	if route =='datasets':
-		return jsonify(pd.DataFrame(datasets)[0].to_dict())
-	elif route == 'models':
-		return jsonify(pd.DataFrame(models)[0].to_dict())
-	elif route == 'docs':
-		return render_template('api.jinja',datasets= datasets,models = models)
-
+#Redirections
 @app.route('/')
 def home():
 	return redirect('Dataset/requirements')
@@ -32,7 +23,7 @@ def home():
 @app.route('/Api')
 def api_redict():
 	return redirect('Api/docs')
-
+#Original data page
 @app.route('/Dataset/<dataset>',methods = ['GET'])
 def index(dataset):
 	db = DB(datasets_dict[dataset])
@@ -48,6 +39,7 @@ def index(dataset):
 	df=df,get_json = get_json_for_line_fig,candlestick = get_candlesticks(df.SMP),
 	dataset = dataset,heatmap = heatmap,start_date = start_date,end_date = end_date)
 
+#Correlation page
 @app.route('/Correlation/<dataset>',methods = ['GET'])
 def corrolations(dataset):
 	db = DB(datasets_dict[dataset])
@@ -58,7 +50,8 @@ def corrolations(dataset):
 	df = df.set_index('SMP').dropna()
 	return render_template('correlation.jinja',title = f'Correlation For {dataset} Dataset For The Past 7 Days',
 	df=df,get_json = get_json_for_fig_scatter,dataset = dataset,start_date = start_date,end_date = end_date)
-
+	
+#Model page
 @app.route('/<name>/<dataset>',methods = ['GET'])
 def page_for_ml_model(dataset,name):
 
@@ -83,6 +76,16 @@ def page_for_ml_model(dataset,name):
 							chart_json = get_json_for_line_scatter(df,df.columns),
 							table = get_table(metrics),dataset = dataset,start_date = start_date,end_date = end_date)
 
+#Api endpoints
+@app.route('/Api/<route>')
+def api(route):
+
+	if route =='datasets':
+		return jsonify(pd.DataFrame(datasets)[0].to_dict())
+	elif route == 'models':
+		return jsonify(pd.DataFrame(models)[0].to_dict())
+	elif route == 'docs':
+		return render_template('api.jinja',datasets= datasets,models = models)
 
 @app.route('/current_prediction/<dataset>')
 def current_prediction(dataset):

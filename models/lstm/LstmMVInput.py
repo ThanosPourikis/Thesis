@@ -77,9 +77,6 @@ class LstmMVInput:
 
 		model = self.LSTM(input_size=self.input_size, hidden_size=self.hidden_size,output_dim = self.output_dim,
 						num_layers=self.num_layers,batch_first=True)
-
-
-
 		self.criterion = L1Loss()
 		optimiser = Adam(model.parameters(), self.learning_rate)
 
