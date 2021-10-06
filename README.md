@@ -12,5 +12,5 @@ Xgboost Model
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/XgBoost.png)
 Lstm Model
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/lstm.png)
-Hybrid Lstm Model
-![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/hybrid_lstm.png)
+Hybrid Model
+![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/hybrid.png)
