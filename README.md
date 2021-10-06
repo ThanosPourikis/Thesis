@@ -1,5 +1,6 @@
 # Thesis
-<h2>Data Visualtion Platform and Electricity Price Prediction Using Sk-learn(Linear Regression,K-NN),XGBOOST,LSTM</h2>
+<h2>Data Visualtion Platform and Electricity Price Prediction</h2>
+<h3>Using Sk-learn(Linear Regression,K-NN),XGBOOST,LSTM</h3>
 
 Data Visualtion
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/index.png)
