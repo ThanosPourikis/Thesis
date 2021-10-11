@@ -7,7 +7,7 @@ from models.model import get_model_results
 from utils import utils
 import logging
 from utils.update_data import update
-import threading
+from threading import Thread
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsRegressor
 from xgboost import XGBRegressor
@@ -73,8 +73,8 @@ for dataset_name in datasets:
 	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
 	dataset = dataset[dataset['lag_24'].notna()]
 	for model,model_name,param in zip(models,model_names,params):
-		threading.Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
-	threads.append(threading.Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
+		Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
+	threads.append(Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
 
 for i in threads:
 	i.start()
