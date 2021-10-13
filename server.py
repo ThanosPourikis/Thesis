@@ -72,6 +72,8 @@ for dataset_name in datasets:
 	dataset = db_in.get_dataset('*',dataset_name)
 	dataset.insert(dataset.shape[1]-1,'lag_24',dataset['SMP'].shift(24))
 	dataset = dataset[dataset['lag_24'].notna()]
+	dataset = dataset[~dataset.index.duplicated(keep='first')]
+
 	for model,model_name,param in zip(models,model_names,params):
 		Thread(target=train_model,args = (model,model_name,dataset,dataset_name,params_list[param],)).start()
 	threads.append(Thread(target=Lstm,args = (LSTM,'Lstm',dataset,dataset_name,params_list['Lstm_params'],)))
