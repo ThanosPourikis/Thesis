@@ -3,7 +3,7 @@
 ### Using Sk-learn(Linear Regression,K-NN),XGBOOST,LSTM
 ### For a live demo [click here](https://thanospourikis.pythonanywhere.com)
 
-### Data Visualtion
+### Data Visualization
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/index.png)
 ### Corrolation
 ![alt text](https://github.com/ThanosPourikis/Thesis/blob/master/static/cor.png)
