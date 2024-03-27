@@ -1,7 +1,7 @@
 pyyaml
 sqlalchemy
 pandas
-sklearn
+scikit-learn
 torch
 requests
 xgboost
