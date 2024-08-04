@@ -54,4 +54,5 @@ def get_smp_files(last_smp_date: datetime, folder_path: Path):
         if name.endswith("Copy.xlsx"):
             os.remove(folder_path + name)
 
+
 # https://www.enexgroup.gr/el/c/document_library/get_file?uuid=08c1813a-100c-42cb-0124-d1f6a7eb3325&groupId=20126

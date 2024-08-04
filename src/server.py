@@ -95,9 +95,7 @@ except Exception as e:
 
 
 def main():
-    engine = create_engine(
-        os.getenv("DATABASE_URL")
-    )
+    engine = create_engine(os.getenv("DATABASE_URL"))
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         stm = select(func.max(Dam.timestamp))
@@ -105,6 +103,7 @@ def main():
     if max_date is None:
         max_date = config.START_DATE
     # rebuild_db(config.FOLDER_PATH)
+
 
 def to_refactor():
     db_in = DB(database_in)

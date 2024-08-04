@@ -60,12 +60,16 @@ def init_logger():
         def filter(self, record):
             return record.levelno < logging.ERROR
 
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
     # File handler
-    file_handler = RotatingFileHandler(getenv("LOG_FILE"), maxBytes=5 * 1024 * 1024, backupCount=2)
+    file_handler = RotatingFileHandler(
+        getenv("LOG_FILE"), maxBytes=5 * 1024 * 1024, backupCount=2
+    )
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.INFO)
     logger.addHandler(file_handler)
@@ -81,5 +85,6 @@ def init_logger():
     stderr_handler.setLevel(logging.ERROR)
     stderr_handler.setFormatter(formatter)
     logger.addHandler(stderr_handler)
+
 
 init_logger()

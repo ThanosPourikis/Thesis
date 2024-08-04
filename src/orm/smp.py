@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlmodel import SQLModel, Field
 
+
 class SMPModel(SQLModel):
     timestamp: datetime = Field(default=None, primary_key=True)
     value: float

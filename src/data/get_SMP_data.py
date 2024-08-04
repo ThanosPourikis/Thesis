@@ -7,6 +7,7 @@ from os import listdir
 import pandas as pd
 from pytz import timezone
 from zoneinfo import ZoneInfo
+
 localTz = timezone("CET")
 dt = localTz.localize(datetime.now()) + timedelta(days=1)
 
@@ -31,17 +32,21 @@ def parse_xlsx_file(files: List[Path]) -> pd.DataFrame:
         df = pd.read_excel(file, header=None)
         line = (df[df.iloc[:, 0] == "Market Clearing Price"]).index[0] + 1
         temp = (
-            pd.DataFrame(df.iloc[line][1:-1])
-            .dropna()
-            .reset_index(drop=True)
+            pd.DataFrame(df.iloc[line][1:-1]).dropna().reset_index(drop=True)
         )
 
-        temp["Date"] = pd.to_datetime(df.iloc[1][0]).tz_localize('Europe/Athens').tz_convert('UTC')
-        temp["Date"] += pd.to_timedelta(df.iloc[1][1:-2].reset_index(drop=True), 'h')
+        temp["Date"] = (
+            pd.to_datetime(df.iloc[1][0])
+            .tz_localize("Europe/Athens")
+            .tz_convert("UTC")
+        )
+        temp["Date"] += pd.to_timedelta(
+            df.iloc[1][1:-2].reset_index(drop=True), "h"
+        )
         print(f"Proccessing {file}")
         export = pd.concat([export, temp])
 
-    export = export.drop_duplicates().set_index('Date')
+    export = export.drop_duplicates().set_index("Date")
     export.columns = ["SMP"]
     export["SMP"] = export["SMP"].astype(float)
     export = export.sort_index()
